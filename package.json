@@ -14,10 +14,6 @@
   },
   "keywords": [],
   "author": "ITG Telematics Pvt. Ltd.",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/w3cj/express-api-starter.git"
-  },
   "license": "",
   "dependencies": {
     "@prisma/client": "^6.9.0",
