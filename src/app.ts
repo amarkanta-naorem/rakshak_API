@@ -13,13 +13,22 @@ const app = express();
 
 app.use(morgan('dev'));
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = ['http://localhost:3000'];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }));
 app.use(express.json());
 
 app.get<{}, MessageResponse>('/', (req, res) => {
-  res.json({
-    message: '🦄🌈✨👋🌎🌍🌏✨🌈🦄',
-  });
+  res.json({ message: 'API is working'});
 });
 
 app.use('/api/v1', api);

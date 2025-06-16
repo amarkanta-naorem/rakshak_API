@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  name        String     @db.VarChar(100)
+  description String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now())
+  deletedAt   DateTime?
+  employees   Employee[]
+
+  @@map("categories")
+}
+
+model Employee {
+  id               Int       @id @default(autoincrement())
+  name             String    @db.VarChar(100)
+  phoneNumber      String?   @db.VarChar(15)
+  categoryId       Int?
+  category         Category? @relation(fields: [categoryId], references: [id])
+  roasterAsManager Roaster[] @relation("Manager")
+  roasterAsEmt     Roaster[] @relation("Emt")
+  roasterAsDriver  Roaster[] @relation("Driver")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now())
+  deletedAt        DateTime?
+
+  @@map("employees")
+}
+
+model Ambulance {
+  id              Int       @id @default(autoincrement())
+  type            String?   @db.VarChar(50)
+  callSign        String?   @db.VarChar(50)
+  ambulanceNumber String?   @db.VarChar(50)
+  zone            String?   @db.VarChar(50)
+  location        String?   @db.VarChar(100)
+  mdtMobileNumber String?   @db.VarChar(20)
+  roasters        Roaster[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
+  deletedAt       DateTime?
+
+  @@map("ambulances")
+}
+
+model Roaster {
+  id          Int      @id @default(autoincrement())
+  roasterDate DateTime @db.Date
+  shift       String   @db.VarChar(10)
+  ambulanceId Int?
+  managerId   Int?
+  emtId       Int?
+  driverId    Int?
+
+  ambulance Ambulance? @relation(fields: [ambulanceId], references: [id])
+  manager   Employee?  @relation("Manager", fields: [managerId], references: [id])
+  emt       Employee?  @relation("Emt", fields: [emtId], references: [id])
+  driver    Employee?  @relation("Driver", fields: [driverId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  @@map("roasters")
+}

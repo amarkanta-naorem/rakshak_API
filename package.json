@@ -1,7 +1,7 @@
 {
-  "name": "express-api-starter-ts",
+  "name": "rakshak",
   "version": "1.2.0",
-  "description": " A basic starter for an express.js API with Typescript",
+  "description": "Operation Ambulance Management",
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
@@ -13,24 +13,29 @@
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
-  "author": "CJ R. <cj@null.computer> (https://w3cj.now.sh)",
+  "author": "ITG Telematics Pvt. Ltd.",
   "repository": {
     "type": "git",
     "url": "https://github.com/w3cj/express-api-starter.git"
   },
-  "license": "MIT",
+  "license": "",
   "dependencies": {
+    "@prisma/client": "^6.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "helmet": "^8.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "multer": "^2.0.1",
+    "prisma": "^6.9.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.20",
     "@types/jest": "^29.5.13",
     "@types/morgan": "^1.9.9",
+    "@types/multer": "^1.4.13",
     "@types/node": "^22.7.5",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^7.16.1",
