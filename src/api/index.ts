@@ -5,6 +5,7 @@ import ambulances from './master/ambulance/ambulances';
 import MessageResponse from '../interfaces/MessageResponse';
 import bulkImportCategories from './master/category/bulkImport';
 import ambulanceLogin from './ambulance/auth/login';
+import allAmbulances from './ambulance/AllAmbulances';
 
 const router = express.Router();
 
@@ -19,5 +20,7 @@ router.use('/master/ambulance', ambulances);
 router.use('/master/category/import', bulkImportCategories);
 
 router.use('/ambulance/auth/login', ambulanceLogin);
+router.use('/ambulances/all', allAmbulances);
+
 
 export default router;
