@@ -24,10 +24,7 @@ router.get<{}, MessageResponse>('/', async (req, res) => {
 
     res.json({ data: categories });
   } catch (error) {
-    console.error('Error fetching categories:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
   } finally {
     await prisma.$disconnect();
   }
