@@ -16,4 +16,5 @@
     "src/**/*.ts",
     "test/**/*.ts", "src/api/master/category",
   ],
+  "exclude": ["node_modules"]
 }
