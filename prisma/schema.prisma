@@ -9,7 +9,7 @@ datasource db {
 
 model Category {
   id          Int        @id @default(autoincrement())
-  name        String     @db.VarChar(100)
+  name        String     @unique @db.VarChar(100)
   description String?    @db.Text
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @default(now())
@@ -22,12 +22,14 @@ model Category {
 model Employee {
   id               Int       @id @default(autoincrement())
   name             String    @db.VarChar(100)
-  phoneNumber      String?   @db.VarChar(15)
+  phoneNumber      String?   @unique @db.VarChar(15)
   categoryId       Int?
   category         Category? @relation(fields: [categoryId], references: [id])
-  roasterAsManager Roaster[] @relation("Manager")
-  roasterAsEmt     Roaster[] @relation("Emt")
-  roasterAsDriver  Roaster[] @relation("Driver")
+  rostersAsManager Roster[]  @relation("RosterManager")
+  rostersAsEmt     Roster[]  @relation("RosterEmt")
+  rostersAsDriver  Roster[]  @relation("RosterDriver")
+  awsFaceId        String?   @db.VarChar(255)
+  faceImageData    Bytes?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @default(now())
   deletedAt        DateTime?
@@ -36,24 +38,42 @@ model Employee {
 }
 
 model Ambulance {
-  id              Int       @id @default(autoincrement())
-  type            String?   @db.VarChar(50)
-  callSign        String?   @db.VarChar(50)
-  ambulanceNumber String?   @db.VarChar(50)
-  zone            String?   @db.VarChar(50)
-  location        String?   @db.VarChar(100)
-  mdtMobileNumber String?   @db.VarChar(20)
-  roasters        Roaster[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @default(now())
+  id              Int               @id @default(autoincrement())
+  type            String?           @db.VarChar(50)
+  callSign        String?           @unique @db.VarChar(50)
+  ambulanceNumber String?           @unique @db.VarChar(50)
+  zone            String?           @db.VarChar(50)
+  location        String?           @db.VarChar(100)
+  mdtMobileNumber String?           @unique @db.VarChar(20)
+  rosters         Roster[]
+  devices         AmbulanceDevice[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now())
   deletedAt       DateTime?
+  currentLogs     AmbulanceLog[]    @relation("CurrentAmbulance")
+  lastLogs        AmbulanceLog[]    @relation("LastAmbulance")
 
   @@map("ambulances")
 }
 
-model Roaster {
+model AmbulanceDevice {
+  id           Int            @id @default(autoincrement())
+  ambulanceId  Int?
+  ambulance    Ambulance?     @relation(fields: [ambulanceId], references: [id])
+  imei         String         @unique @db.VarChar(50)
+  username     String         @unique @db.VarChar(255)
+  password     String         @db.Text
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
+  deletedAt    DateTime?
+  AmbulanceLog AmbulanceLog[]
+
+  @@map("ambulanceDevices")
+}
+
+model Roster {
   id          Int      @id @default(autoincrement())
-  roasterDate DateTime @db.Date
+  rosterDate  DateTime @db.Date
   shift       String   @db.VarChar(10)
   ambulanceId Int?
   managerId   Int?
@@ -61,13 +81,31 @@ model Roaster {
   driverId    Int?
 
   ambulance Ambulance? @relation(fields: [ambulanceId], references: [id])
-  manager   Employee?  @relation("Manager", fields: [managerId], references: [id])
-  emt       Employee?  @relation("Emt", fields: [emtId], references: [id])
-  driver    Employee?  @relation("Driver", fields: [driverId], references: [id])
+  manager   Employee?  @relation("RosterManager", fields: [managerId], references: [id])
+  emt       Employee?  @relation("RosterEmt", fields: [emtId], references: [id])
+  driver    Employee?  @relation("RosterDriver", fields: [driverId], references: [id])
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now())
   deletedAt DateTime?
 
-  @@map("roasters")
+  @@map("rosters")
+}
+
+model AmbulanceLog {
+  id                      Int       @id @default(autoincrement())
+  ambulanceId             Int?
+  lastAssignedAmbulanceId Int?
+  deviceId                Int?
+  assignedAt              DateTime? @default(now())
+  unassignedAt            DateTime
+  reason                  String?   @db.Text
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @default(now())
+
+  ambulance             Ambulance?       @relation("CurrentAmbulance", fields: [ambulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  lastAssignedAmbulance Ambulance?       @relation("LastAmbulance", fields: [lastAssignedAmbulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  device                AmbulanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("ambulanceLogs")
 }

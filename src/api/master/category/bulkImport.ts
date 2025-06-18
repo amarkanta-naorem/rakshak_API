@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 const storage = multer.memoryStorage();
 const upload = multer({
     storage,
-    fileFilter: (req: express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    fileFilter: (req, file, cb) => {
         const allowedTypes = [
             'application/vnd.ms-excel',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -52,14 +52,19 @@ router.post<{}, MessageResponse>('/', upload.single('file'), (async (req, res) =
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const rows: CategoryRow[] = xlsx.utils.sheet_to_json(sheet, { 
+        const rawRows: CategoryRow[] = xlsx.utils.sheet_to_json(sheet, {
             header: ['Name', 'Description'],
-            range: 1
+            range: 1,
         });
 
-        const validatedRows = rows.filter(row => {
-            return typeof row.Name === 'string' && (!row.Description || typeof row.Description === 'string');
-        }) as CategoryRow[];
+        const cleanedRows = rawRows.map((row) => ({
+            Name: typeof row.Name === 'string' ? row.Name.trim() : '',
+            Description: typeof row.Description === 'string' ? row.Description.trim() : undefined,
+        })) as CategoryRow[];
+
+        const validatedRows = cleanedRows.filter(row => {
+            return row.Name && typeof row.Name === 'string' && (!row.Description || typeof row.Description === 'string');
+        });
 
         if (validatedRows.length === 0) {
             return res.status(400).json({ message: 'Excel file is empty or contains no valid rows' });
@@ -71,21 +76,59 @@ router.post<{}, MessageResponse>('/', upload.single('file'), (async (req, res) =
             errors: [] as string[],
         };
 
+        const fileNamesSet = new Set<string>();
+        const duplicateInFile = new Set<string>();
+
+        for (const row of validatedRows) {
+            const normalized = row.Name.toLowerCase();
+            if (fileNamesSet.has(normalized)) {
+                duplicateInFile.add(normalized);
+            } else {
+                fileNamesSet.add(normalized);
+            }
+        }
+
+        const existingCategories = await prisma.category.findMany({
+            where: {
+                name: {
+                    in: Array.from(fileNamesSet),
+                    mode: 'insensitive',
+                },
+            },
+            select: { name: true },
+        });
+
+        const existingNamesSet = new Set(existingCategories.map(cat => cat.name.toLowerCase()));
+
         await prisma.$transaction(async (tx) => {
             for (const [index, row] of validatedRows.entries()) {
+                const rowNum = index + 2;
                 const { isValid, errors } = validateRow(row);
+                const normalized = row.Name.toLowerCase();
 
                 if (!isValid) {
                     results.failed++;
-                    results.errors.push(`Row ${index + 2}: ${errors.join(', ')}`);
+                    results.errors.push(`Row ${rowNum}: ${errors.join(', ')}`);
+                    continue;
+                }
+
+                if (duplicateInFile.has(normalized)) {
+                    results.failed++;
+                    results.errors.push(`Row ${rowNum}: Duplicate name '${row.Name}' found in file`);
+                    continue;
+                }
+
+                if (existingNamesSet.has(normalized)) {
+                    results.failed++;
+                    results.errors.push(`Row ${rowNum}: Category '${row.Name}' already exists`);
                     continue;
                 }
 
                 try {
                     await tx.category.create({
                         data: {
-                            name: row.Name.trim(),
-                            description: row.Description?.trim() ?? null,
+                            name: row.Name,
+                            description: row.Description ?? null,
                             createdAt: new Date(),
                             updatedAt: new Date(),
                         } as Prisma.CategoryCreateInput,
@@ -93,7 +136,7 @@ router.post<{}, MessageResponse>('/', upload.single('file'), (async (req, res) =
                     results.success++;
                 } catch (error) {
                     results.failed++;
-                    results.errors.push(`Row ${index + 2}: Failed to save category - ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    results.errors.push(`Row ${rowNum}: Failed to save category - ${error instanceof Error ? error.message : 'Unknown error'}`);
                 }
             }
         });
