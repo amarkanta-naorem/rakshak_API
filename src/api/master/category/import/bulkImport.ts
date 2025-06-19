@@ -2,7 +2,7 @@ import express, { RequestHandler } from 'express';
 import multer from 'multer';
 import * as xlsx from 'xlsx';
 import { Prisma, PrismaClient } from '@prisma/client';
-import MessageResponse from '../../../interfaces/MessageResponse';
+import MessageResponse from '../../../../interfaces/MessageResponse';
 
 const router = express.Router();
 const prisma = new PrismaClient();
