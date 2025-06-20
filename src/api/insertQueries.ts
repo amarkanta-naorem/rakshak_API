@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
 const router = Router();
 
-// Read your SQL insert statements (or you can hardcode them directly here)
-const sql = fs.readFileSync('src\api\insert.sql', 'utf-8');
+// Safely resolve path to insert.sql file
+const sqlFilePath = path.join(__dirname, '../../script/insert.sql'); // adjust based on your project layout
+const sql = fs.readFileSync(sqlFilePath, 'utf-8');
 
 router.post('/', async (req, res) => {
   if (req.headers['x-import-token'] !== process.env.IMPORT_SECRET) {
