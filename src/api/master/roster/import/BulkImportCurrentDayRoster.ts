@@ -1,6 +1,6 @@
 import express, { RequestHandler } from 'express';
 import multer from 'multer';
-import * as xlsx from 'xlsx';
+import xlsx from 'xlsx';
 import { PrismaClient } from '@prisma/client';
 import MessageResponse from '../../../../interfaces/MessageResponse';
 
@@ -48,8 +48,8 @@ const cleanGeneralString = (val: any): string => {
   return String(val).trim().replace(/\s+/g, ' ');
 };
 
-const cleanPhoneString = (val: any): string => {
-  if (val === null || val === undefined || val === '') return '';
+const cleanPhoneString = (val: any): string | null => {
+  if (val === null || val === undefined || val === '') return null;
   let str = String(val).trim();
   
   if (str.endsWith('.0') && !isNaN(Number(str))) {
@@ -57,7 +57,7 @@ const cleanPhoneString = (val: any): string => {
   }
   
   str = str.replace(/[^0-9]/g, '');
-  return str;
+  return str || null;
 };
 
 router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), (async (req, res) => {
@@ -101,8 +101,6 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
     };
 
     const validRows = [];
-    // const seenRowKeys = new Set<string>();
-
     const requiredCategories = ['Manager', 'EMT', 'Driver'];
     const categories = await prisma.category.findMany({
       where: { name: { in: requiredCategories } },
@@ -132,6 +130,20 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
         const driverName = cleanGeneralString(row['DRIVER NAME']);
         const driverPhone = cleanPhoneString(row['DRIVER PHONE NUMBER']);
 
+        console.log({
+          callSign,
+          zone,
+          ambulanceNumber,
+          location,
+          mdtMobileNumber,
+          managerName,
+          managerPhone,
+          emtName,
+          emtPhone,
+          driverName,
+          driverPhone,
+        });
+
         const isEmptyRow = !callSign && !zone && !ambulanceNumber && 
                           !location && !mdtMobileNumber &&
                           !managerName && !managerPhone &&
@@ -149,7 +161,6 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
         if (!zone) missingFields.push('Zone');
         if (!ambulanceNumber) missingFields.push('Ambulance Number');
         if (!location) missingFields.push('Location');
-        if (!mdtMobileNumber) missingFields.push('MDT Mobile Number');
         if (!managerName) missingFields.push('Manager Name');
         if (!managerPhone) missingFields.push('Manager Phone');
         if (!emtName) missingFields.push('EMT Name');
@@ -161,20 +172,14 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
           throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
         }
 
-        // Create unique key for duplicate check
-        // const rowKey = `${rosterDate}-${shift}-${callSign}`;
-        // if (seenRowKeys.has(rowKey)) {
-        //   throw new Error('Duplicate roster detected for this date/shift/ambulance');
-        // }
-        // seenRowKeys.add(rowKey);
-
         const ambulance = await prisma.ambulance.findFirst({
           where: {
             callSign: { equals: callSign, mode: 'insensitive' },
-            zone: { equals: zone, mode: 'insensitive' },
             ambulanceNumber: { equals: ambulanceNumber, mode: 'insensitive' },
-            location: { equals: location, mode: 'insensitive' },
-            mdtMobileNumber,
+            // Optionally include zone and location if needed
+            // zone: { equals: zone, mode: 'insensitive' },
+            // location: { equals: location, mode: 'insensitive' },
+            mdtMobileNumber: mdtMobileNumber ?? null,
           },
         });
 
