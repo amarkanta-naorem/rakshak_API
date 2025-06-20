@@ -8,13 +8,15 @@ datasource db {
 }
 
 model Category {
-  id          Int        @id @default(autoincrement())
-  name        String     @unique @db.VarChar(100)
-  description String?    @db.Text
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now())
-  deletedAt   DateTime?
-  employees   Employee[]
+  id             Int        @id @default(autoincrement())
+  name           String     @unique @db.VarChar(100)
+  description    String?    @db.Text
+  shiftStartTime String?    @db.VarChar(5) // e.g., "08:30"
+  shiftEndTime   String?    @db.VarChar(5) // e.g., "17:00"
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @default(now())
+  deletedAt      DateTime?
+  employees      Employee[]
 
   @@map("categories")
 }

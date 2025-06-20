@@ -5,6 +5,8 @@ interface Category {
   id: number;
   name: string;
   description: string | null;
+  shiftStartTime: string | null;
+  shiftEndTime: string | null;
 }
 
 interface MessageResponse {
@@ -19,7 +21,7 @@ router.get<{}, MessageResponse>('/', async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
       where: { deletedAt: null },
-      select: { id: true, name: true, description: true },
+      select: { id: true, name: true, description: true, shiftStartTime: true, shiftEndTime: true },
     });
 
     res.json({ data: categories });
