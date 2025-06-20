@@ -14,8 +14,6 @@ import insertAmbulances from './ambulance/InsertAmbulances';
 import insertAmbulanceDevices from './ambulance/ambulanceDevice/InsertAmbulanceDevices';
 import GetAmbulanceEmployeeDetails from './ambulance/GetAmbulanceEmployeeDetails';
 
-import runSQL from './insertQueries';
-
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
@@ -35,9 +33,6 @@ router.use('/ambulances/all', allAmbulances);
 router.use('/ambulance', insertAmbulances);
 router.use('/ambulance/device', insertAmbulanceDevices);
 router.use('/ambulance/employees', GetAmbulanceEmployeeDetails);
-
-
-router.use('/run-sql', runSQL);
 
 
 export default router;
