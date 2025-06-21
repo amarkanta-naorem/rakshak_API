@@ -15,7 +15,7 @@
   "author": "ITG Telematics Pvt. Ltd.",
   "license": "",
   "dependencies": {
-    "@prisma/client": "^6.10.0",
+    "@prisma/client": "^6.10.1",
     "@types/jsonwebtoken": "^9.0.10",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -42,7 +42,7 @@
     "eslint-plugin-import": "^2.31.0",
     "jest": "^29.7.0",
     "nodemon": "^3.1.7",
-    "prisma": "^6.10.0",
+    "prisma": "^6.10.1",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",

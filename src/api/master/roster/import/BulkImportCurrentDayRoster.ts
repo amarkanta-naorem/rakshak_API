@@ -130,20 +130,6 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
         const driverName = cleanGeneralString(row['DRIVER NAME']);
         const driverPhone = cleanPhoneString(row['DRIVER PHONE NUMBER']);
 
-        console.log({
-          callSign,
-          zone,
-          ambulanceNumber,
-          location,
-          mdtMobileNumber,
-          managerName,
-          managerPhone,
-          emtName,
-          emtPhone,
-          driverName,
-          driverPhone,
-        });
-
         const isEmptyRow = !callSign && !zone && !ambulanceNumber && 
                           !location && !mdtMobileNumber &&
                           !managerName && !managerPhone &&
@@ -174,11 +160,8 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
 
         const ambulance = await prisma.ambulance.findFirst({
           where: {
-            callSign: { equals: callSign, mode: 'insensitive' },
-            ambulanceNumber: { equals: ambulanceNumber, mode: 'insensitive' },
-            // Optionally include zone and location if needed
-            // zone: { equals: zone, mode: 'insensitive' },
-            // location: { equals: location, mode: 'insensitive' },
+            callSign: { equals: callSign },
+            ambulanceNumber: { equals: ambulanceNumber },
             mdtMobileNumber: mdtMobileNumber ?? null,
           },
         });
@@ -189,7 +172,7 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
 
         const manager = await prisma.employee.findFirst({
           where: {
-            name: { equals: managerName, mode: 'insensitive' },
+            name: { equals: managerName },
             phoneNumber: managerPhone,
             category: { name: 'Manager' },
           },
@@ -201,7 +184,7 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
 
         const emt = await prisma.employee.findFirst({
           where: {
-            name: { equals: emtName, mode: 'insensitive' },
+            name: { equals: emtName },
             phoneNumber: emtPhone,
             category: { name: 'EMT' },
           },
@@ -213,7 +196,7 @@ router.post<{}, MessageResponse, RosterRequestBody>('/', upload.single('file'), 
 
         const driver = await prisma.employee.findFirst({
           where: {
-            name: { equals: driverName, mode: 'insensitive' },
+            name: { equals: driverName },
             phoneNumber: driverPhone,
             category: { name: 'Driver' },
           },

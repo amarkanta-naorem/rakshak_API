@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -11,10 +11,10 @@ model Category {
   id             Int        @id @default(autoincrement())
   name           String     @unique @db.VarChar(100)
   description    String?    @db.Text
-  shiftStartTime String?    @db.VarChar(5) // e.g., "08:30"
-  shiftEndTime   String?    @db.VarChar(5) // e.g., "17:00"
+  shiftStartTime String?    @db.VarChar(5)
+  shiftEndTime   String?    @db.VarChar(5)
   createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @default(now())
+  updatedAt      DateTime?  // Changed to nullable to match MySQL `TIMESTAMP NULL`
   deletedAt      DateTime?
   employees      Employee[]
 
@@ -31,9 +31,9 @@ model Employee {
   rostersAsEmt     Roster[]  @relation("RosterEmt")
   rostersAsDriver  Roster[]  @relation("RosterDriver")
   awsFaceId        String?   @db.VarChar(255)
-  faceImageData    Bytes?
+  faceImageData    String?   @db.LongText
   createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @default(now())
+  updatedAt        DateTime?  // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
   deletedAt        DateTime?
 
   @@map("employees")
@@ -50,7 +50,7 @@ model Ambulance {
   rosters         Roster[]
   devices         AmbulanceDevice[]
   createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @default(now())
+  updatedAt       DateTime?         // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
   deletedAt       DateTime?
   currentLogs     AmbulanceLog[]    @relation("CurrentAmbulance")
   lastLogs        AmbulanceLog[]    @relation("LastAmbulance")
@@ -66,7 +66,7 @@ model AmbulanceDevice {
   username     String         @unique @db.VarChar(255)
   password     String         @db.Text
   createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @default(now())
+  updatedAt    DateTime?      // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
   deletedAt    DateTime?
   AmbulanceLog AmbulanceLog[]
 
@@ -81,15 +81,13 @@ model Roster {
   managerId   Int?
   emtId       Int?
   driverId    Int?
-
-  ambulance Ambulance? @relation(fields: [ambulanceId], references: [id])
-  manager   Employee?  @relation("RosterManager", fields: [managerId], references: [id])
-  emt       Employee?  @relation("RosterEmt", fields: [emtId], references: [id])
-  driver    Employee?  @relation("RosterDriver", fields: [driverId], references: [id])
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
-  deletedAt DateTime?
+  ambulance   Ambulance? @relation(fields: [ambulanceId], references: [id])
+  manager     Employee?  @relation("RosterManager", fields: [managerId], references: [id])
+  emt         Employee?  @relation("RosterEmt", fields: [emtId], references: [id])
+  driver      Employee?  @relation("RosterDriver", fields: [driverId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?  // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
+  deletedAt   DateTime?
 
   @@map("rosters")
 }
@@ -102,12 +100,11 @@ model AmbulanceLog {
   assignedAt              DateTime? @default(now())
   unassignedAt            DateTime
   reason                  String?   @db.Text
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @default(now())
-
-  ambulance             Ambulance?       @relation("CurrentAmbulance", fields: [ambulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  lastAssignedAmbulance Ambulance?       @relation("LastAmbulance", fields: [lastAssignedAmbulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  device                AmbulanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdAt               DateTime? // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
+  updatedAt               DateTime? // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
+  ambulance               Ambulance? @relation("CurrentAmbulance", fields: [ambulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  lastAssignedAmbulance   Ambulance? @relation("LastAmbulance", fields: [lastAssignedAmbulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  device                  AmbulanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@map("ambulanceLogs")
 }

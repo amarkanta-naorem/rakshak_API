@@ -48,7 +48,6 @@ router.post('/', upload.none(), validateEmployeeRequest, async (req: Request<{},
             where: {
                 name: {
                     equals: categoryName!,
-                    mode: 'insensitive',
                 },
             },
         });
@@ -57,13 +56,8 @@ router.post('/', upload.none(), validateEmployeeRequest, async (req: Request<{},
             return res.status(400).json({ error: `Category '${categoryName}' not found.` });
         }
 
-        let faceImageBuffer: Buffer | undefined = undefined;
-        if (faceImageData) {
-            try {
-                faceImageBuffer = Buffer.from(faceImageData, 'base64');
-            } catch {
-                return res.status(400).json({ error: 'Invalid face image data.' });
-            }
+        if (faceImageData && typeof faceImageData !== 'string') {
+            return res.status(400).json({ error: 'Invalid face image data.' });
         }
 
         const newEmployee = await prisma.employee.create({
@@ -72,7 +66,7 @@ router.post('/', upload.none(), validateEmployeeRequest, async (req: Request<{},
                 phoneNumber: phoneNumber!,
                 categoryId: category.id,
                 awsFaceId: awsFaceId || null,
-                faceImageData: faceImageBuffer || null,
+                faceImageData: faceImageData || null,
             },
             include: {
                 category: true,
@@ -81,7 +75,7 @@ router.post('/', upload.none(), validateEmployeeRequest, async (req: Request<{},
 
         const { createdAt, updatedAt, deletedAt, category: cat, categoryId, ...rest } = newEmployee;
 
-        res.status(201).json({...rest, categoryName: cat?.name || null});
+        res.status(201).json({ ...rest, categoryName: cat?.name || null });
     } catch (error: any) {
         res.status(500).json({
             error: 'Failed to create employee.',

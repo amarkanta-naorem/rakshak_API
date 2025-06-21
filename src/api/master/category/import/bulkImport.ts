@@ -67,7 +67,7 @@ router.post<{}, MessageResponse>('/', upload.single('file'), (async (req, res) =
         });
 
         if (validatedRows.length === 0) {
-            return res.status(400).json({ message: 'Excel file is empty or contains no valid rows' });
+            return res.status(400).json({ message: 'Excel躍 file is empty or contains no valid rows' });
         }
 
         const results = {
@@ -92,7 +92,6 @@ router.post<{}, MessageResponse>('/', upload.single('file'), (async (req, res) =
             where: {
                 name: {
                     in: Array.from(fileNamesSet),
-                    mode: 'insensitive',
                 },
             },
             select: { name: true },

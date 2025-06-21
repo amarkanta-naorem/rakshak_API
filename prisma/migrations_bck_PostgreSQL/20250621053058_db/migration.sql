@@ -1,27 +1,47 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE "categories" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "description" TEXT,
+    "shiftStartTime" VARCHAR(5),
+    "shiftEndTime" VARCHAR(5),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deletedAt" TIMESTAMP(3),
 
-  - You are about to drop the `roasters` table. If the table is not empty, all the data it contains will be lost.
+    CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
+);
 
-*/
--- DropForeignKey
-ALTER TABLE "roasters" DROP CONSTRAINT "roasters_ambulanceId_fkey";
+-- CreateTable
+CREATE TABLE "employees" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "phoneNumber" VARCHAR(15),
+    "categoryId" INTEGER,
+    "awsFaceId" VARCHAR(255),
+    "faceImageData" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deletedAt" TIMESTAMP(3),
 
--- DropForeignKey
-ALTER TABLE "roasters" DROP CONSTRAINT "roasters_driverId_fkey";
+    CONSTRAINT "employees_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "roasters" DROP CONSTRAINT "roasters_emtId_fkey";
+-- CreateTable
+CREATE TABLE "ambulances" (
+    "id" SERIAL NOT NULL,
+    "type" VARCHAR(50),
+    "callSign" VARCHAR(50),
+    "ambulanceNumber" VARCHAR(50),
+    "zone" VARCHAR(50),
+    "location" VARCHAR(100),
+    "mdtMobileNumber" VARCHAR(20),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deletedAt" TIMESTAMP(3),
 
--- DropForeignKey
-ALTER TABLE "roasters" DROP CONSTRAINT "roasters_managerId_fkey";
-
--- AlterTable
-ALTER TABLE "employees" ADD COLUMN     "awsFaceId" VARCHAR(255),
-ADD COLUMN     "faceImageData" BYTEA;
-
--- DropTable
-DROP TABLE "roasters";
+    CONSTRAINT "ambulances_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "ambulanceDevices" (
@@ -69,10 +89,28 @@ CREATE TABLE "ambulanceLogs" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "employees_phoneNumber_key" ON "employees"("phoneNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ambulances_callSign_key" ON "ambulances"("callSign");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ambulances_ambulanceNumber_key" ON "ambulances"("ambulanceNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ambulances_mdtMobileNumber_key" ON "ambulances"("mdtMobileNumber");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ambulanceDevices_imei_key" ON "ambulanceDevices"("imei");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ambulanceDevices_username_key" ON "ambulanceDevices"("username");
+
+-- AddForeignKey
+ALTER TABLE "employees" ADD CONSTRAINT "employees_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ambulanceDevices" ADD CONSTRAINT "ambulanceDevices_ambulanceId_fkey" FOREIGN KEY ("ambulanceId") REFERENCES "ambulances"("id") ON DELETE SET NULL ON UPDATE CASCADE;

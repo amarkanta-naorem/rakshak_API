@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient()
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5001;
 
 dotenv.config();
 
