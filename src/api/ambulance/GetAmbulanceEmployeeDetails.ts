@@ -3,23 +3,48 @@ import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 
 interface EmployeeWithCategory {
-  id: number;
+  employee_id: number;
   name: string;
   awsFaceId: string | null;
   faceImageData: string | null;
   categoryName: string | null;
   shiftStartTime: string | null;
   shiftEndTime: string | null;
+  ambulance_id: number;
+}
+
+interface AmbulanceResponse {
+  id: number;
+  type: string | null;
+  callSign: string | null;
+  ambulanceNumber: string;
+  zone: string | null;
+  location: string | null;
+  mdtMobileNumber: string | null;
+  ambulance_id: number;
+}
+
+interface RosterResponse {
+  id: number;
+  rosterDate: Date;
+  shift: string | null;
+  ambulanceId: number | null;
+  managerId: number | null;
+  emtId: number | null;
+  driverId: number | null;
+  createdAt: Date;
+  updatedAt: Date | null;
+  deletedAt: Date | null;
+  ambulance: AmbulanceResponse;
 }
 
 const prisma = new PrismaClient();
 const router = express.Router();
-const upload = multer(); // Multer instance to parse form-data
+const upload = multer(); 
 
-// GET /api/v1/ambulance/employees
 router.get('/', async (req, res) => {
   try {
-    const { ambulanceNumber, rosterDate } = req.query; // Changed from req.query to req.body
+    const { ambulanceNumber, rosterDate } = req.query;
 
     if (!ambulanceNumber || !rosterDate) {
       return res.status(400).json({ error: 'Ambulance Number and Roster Date not found' });
@@ -82,13 +107,14 @@ router.get('/', async (req, res) => {
     });
 
     const formattedEmployees: EmployeeWithCategory[] = employees.map(emp => ({
-      id: emp.id,
+      employee_id: emp.id,
       name: emp.name,
       awsFaceId: emp.awsFaceId,
-      faceImageData: emp.faceImageData ? Buffer.from(emp.faceImageData).toString('base64') : null,
+      faceImageData: emp.faceImageData ? emp.faceImageData : null,
       categoryName: emp.category?.name ?? null,
       shiftStartTime: emp.category?.shiftStartTime ?? null,
       shiftEndTime: emp.category?.shiftEndTime ?? null,
+      ambulance_id: ambulance.id,
     }));
 
     res.json(formattedEmployees);
@@ -99,7 +125,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /roster (unchanged)
+// POST /roster
 router.post('/roster', async (req, res) => {
   try {
     const ambulanceNumber = req.body.ambulanceNumber?.trim();
@@ -137,11 +163,11 @@ router.post('/roster', async (req, res) => {
       },
     });
 
-    if (!roster) {
+    if (!roster || !roster.ambulance) {
       return res.status(404).json({ error: 'No roster found for the specified date and ambulance' });
     }
 
-    res.json({
+    const response: RosterResponse = {
       id: roster.id,
       rosterDate: roster.rosterDate,
       shift: roster.shift,
@@ -152,8 +178,20 @@ router.post('/roster', async (req, res) => {
       createdAt: roster.createdAt,
       updatedAt: roster.updatedAt,
       deletedAt: roster.deletedAt,
-      ambulance: roster.ambulance,
-    });
+      ambulance: {
+        id: roster.ambulance.id,
+        type: roster.ambulance.type,
+        callSign: roster.ambulance.callSign,
+        // ambulanceNumber: roster.ambulance.ambulanceNumber,
+        zone: roster.ambulance.zone,
+        location: roster.ambulance.location,
+        mdtMobileNumber: roster.ambulance.mdtMobileNumber,
+        ambulance_id: roster.ambulance.id,
+        ambulanceNumber: ''
+      },
+    };
+
+    res.json(response);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
