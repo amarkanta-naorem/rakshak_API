@@ -95,6 +95,29 @@ CREATE TABLE `ambulanceLogs` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `attendances` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `employeeId` INTEGER NOT NULL,
+    `ambulanceId` INTEGER NULL,
+    `rosterId` INTEGER NULL,
+    `shiftType` ENUM('Day Shift', 'Night Night') NOT NULL,
+    `shiftStart` DATETIME(3) NOT NULL,
+    `shiftEnd` DATETIME(3) NOT NULL,
+    `punchIn` DATETIME(3) NULL,
+    `punchInLocation` VARCHAR(191) NULL,
+    `punchOut` DATETIME(3) NULL,
+    `punchOutLocation` VARCHAR(191) NULL,
+    `status` ENUM('Present', 'Absent', 'Late') NOT NULL DEFAULT 'Absent',
+    `timeLogged` VARCHAR(191) NULL,
+    `date` DATETIME(3) NOT NULL,
+
+    INDEX `attendances_employeeId_idx`(`employeeId`),
+    INDEX `attendances_ambulanceId_idx`(`ambulanceId`),
+    INDEX `attendances_rosterId_idx`(`rosterId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `employees` ADD CONSTRAINT `employees_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `categories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -121,3 +144,12 @@ ALTER TABLE `ambulanceLogs` ADD CONSTRAINT `ambulanceLogs_lastAssignedAmbulanceI
 
 -- AddForeignKey
 ALTER TABLE `ambulanceLogs` ADD CONSTRAINT `ambulanceLogs_deviceId_fkey` FOREIGN KEY (`deviceId`) REFERENCES `ambulanceDevices`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `attendances` ADD CONSTRAINT `attendances_employeeId_fkey` FOREIGN KEY (`employeeId`) REFERENCES `employees`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `attendances` ADD CONSTRAINT `attendances_ambulanceId_fkey` FOREIGN KEY (`ambulanceId`) REFERENCES `ambulances`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `attendances` ADD CONSTRAINT `attendances_rosterId_fkey` FOREIGN KEY (`rosterId`) REFERENCES `rosters`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

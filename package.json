@@ -16,8 +16,10 @@
   "license": "",
   "dependencies": {
     "@prisma/client": "^6.10.1",
+    "@types/date-fns": "^2.5.3",
     "@types/jsonwebtoken": "^9.0.10",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "helmet": "^8.0.0",

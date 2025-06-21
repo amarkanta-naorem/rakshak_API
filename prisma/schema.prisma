@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ShiftType {
+  Day_Shift   @map("Day Shift")
+  Night_Night @map("Night Night")
+}
+
+enum AttendanceStatus {
+  Present
+  Absent
+  Late
+}
+
 model Category {
   id             Int        @id @default(autoincrement())
   name           String     @unique @db.VarChar(100)
@@ -14,7 +25,7 @@ model Category {
   shiftStartTime String?    @db.VarChar(5)
   shiftEndTime   String?    @db.VarChar(5)
   createdAt      DateTime   @default(now())
-  updatedAt      DateTime?  // Changed to nullable to match MySQL `TIMESTAMP NULL`
+  updatedAt      DateTime?
   deletedAt      DateTime?
   employees      Employee[]
 
@@ -33,8 +44,10 @@ model Employee {
   awsFaceId        String?   @db.VarChar(255)
   faceImageData    String?   @db.LongText
   createdAt        DateTime  @default(now())
-  updatedAt        DateTime?  // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
+  updatedAt        DateTime?
   deletedAt        DateTime?
+
+  Attendance Attendance[]
 
   @@map("employees")
 }
@@ -50,10 +63,12 @@ model Ambulance {
   rosters         Roster[]
   devices         AmbulanceDevice[]
   createdAt       DateTime          @default(now())
-  updatedAt       DateTime?         // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
+  updatedAt       DateTime?
   deletedAt       DateTime?
   currentLogs     AmbulanceLog[]    @relation("CurrentAmbulance")
   lastLogs        AmbulanceLog[]    @relation("LastAmbulance")
+
+  Attendance Attendance[]
 
   @@map("ambulances")
 }
@@ -66,7 +81,7 @@ model AmbulanceDevice {
   username     String         @unique @db.VarChar(255)
   password     String         @db.Text
   createdAt    DateTime       @default(now())
-  updatedAt    DateTime?      // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
+  updatedAt    DateTime?
   deletedAt    DateTime?
   AmbulanceLog AmbulanceLog[]
 
@@ -74,9 +89,9 @@ model AmbulanceDevice {
 }
 
 model Roster {
-  id          Int      @id @default(autoincrement())
-  rosterDate  DateTime @db.Date
-  shift       String   @db.VarChar(10)
+  id          Int        @id @default(autoincrement())
+  rosterDate  DateTime   @db.Date
+  shift       String     @db.VarChar(10)
   ambulanceId Int?
   managerId   Int?
   emtId       Int?
@@ -85,26 +100,54 @@ model Roster {
   manager     Employee?  @relation("RosterManager", fields: [managerId], references: [id])
   emt         Employee?  @relation("RosterEmt", fields: [emtId], references: [id])
   driver      Employee?  @relation("RosterDriver", fields: [driverId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime?  // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime?
   deletedAt   DateTime?
+
+  Attendance Attendance[]
 
   @@map("rosters")
 }
 
 model AmbulanceLog {
-  id                      Int       @id @default(autoincrement())
+  id                      Int              @id @default(autoincrement())
   ambulanceId             Int?
   lastAssignedAmbulanceId Int?
   deviceId                Int?
-  assignedAt              DateTime? @default(now())
+  assignedAt              DateTime?        @default(now())
   unassignedAt            DateTime
-  reason                  String?   @db.Text
-  createdAt               DateTime? // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
-  updatedAt               DateTime? // Changed to nullable to match MySQL `TIMESTAMP NULL DEFAULT NULL`
-  ambulance               Ambulance? @relation("CurrentAmbulance", fields: [ambulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  lastAssignedAmbulance   Ambulance? @relation("LastAmbulance", fields: [lastAssignedAmbulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  reason                  String?          @db.Text
+  createdAt               DateTime?
+  updatedAt               DateTime?
+  ambulance               Ambulance?       @relation("CurrentAmbulance", fields: [ambulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  lastAssignedAmbulance   Ambulance?       @relation("LastAmbulance", fields: [lastAssignedAmbulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   device                  AmbulanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@map("ambulanceLogs")
+}
+
+model Attendance {
+  id          Int        @id @default(autoincrement())
+  employee    Employee   @relation(fields: [employeeId], references: [id])
+  employeeId  Int
+  ambulance   Ambulance? @relation(fields: [ambulanceId], references: [id])
+  ambulanceId Int?
+  roster      Roster?    @relation(fields: [rosterId], references: [id])
+  rosterId    Int?
+
+  shiftType        ShiftType
+  shiftStart       String?
+  shiftEnd         String?
+  punchIn          String?
+  punchInLocation  String?
+  punchOut         String?
+  punchOutLocation String?
+  status           AttendanceStatus @default(Absent)
+  timeLogged       String?
+  date             String?
+
+  @@index([employeeId])
+  @@index([ambulanceId])
+  @@index([rosterId])
+  @@map("attendances")
 }
