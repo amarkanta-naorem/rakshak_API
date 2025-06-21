@@ -17,9 +17,9 @@ const router = express.Router();
 const upload = multer(); // Multer instance to parse form-data
 
 // GET /api/v1/ambulance/employees
-router.get('/', upload.none(), async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const { ambulanceNumber, rosterDate } = req.body; // Changed from req.query to req.body
+    const { ambulanceNumber, rosterDate } = req.query; // Changed from req.query to req.body
 
     if (!ambulanceNumber || !rosterDate) {
       return res.status(400).json({ error: 'Ambulance Number and Roster Date not found' });
@@ -100,7 +100,7 @@ router.get('/', upload.none(), async (req, res) => {
 });
 
 // POST /roster (unchanged)
-router.post('/roster', upload.none(), async (req, res) => {
+router.post('/roster', async (req, res) => {
   try {
     const ambulanceNumber = req.body.ambulanceNumber?.trim();
     const rosterDate = req.body.rosterDate?.trim();
