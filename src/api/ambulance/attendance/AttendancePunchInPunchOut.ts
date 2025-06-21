@@ -14,7 +14,7 @@ interface AttendanceInsertBody {
   shiftType: string;
   punchTime?: string; 
   punchLocation?: string;
-  status: 'Present' | 'Late' | 'Absent';
+  status: string;
   date: string; 
 }
 

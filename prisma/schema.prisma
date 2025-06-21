@@ -7,12 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum AttendanceStatus {
-  Present
-  Absent
-  Late
-}
-
 model Category {
   id             Int        @id @default(autoincrement())
   name           String     @unique @db.VarChar(100)
@@ -133,11 +127,8 @@ model Attendance {
   shiftType     String?
   punchTime     String?
   punchLocation String?
-  status        AttendanceStatus @default(Absent)
+  status        String?
   date          String?
 
-  @@index([employeeId])
-  @@index([ambulanceId])
-  @@index([rosterId])
   @@map("attendances")
 }

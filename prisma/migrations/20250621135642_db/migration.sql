@@ -104,12 +104,9 @@ CREATE TABLE `attendances` (
     `shiftType` VARCHAR(191) NULL,
     `punchTime` VARCHAR(191) NULL,
     `punchLocation` VARCHAR(191) NULL,
-    `status` ENUM('Present', 'Absent', 'Late') NOT NULL DEFAULT 'Absent',
+    `status` VARCHAR(191) NULL,
     `date` VARCHAR(191) NULL,
 
-    INDEX `attendances_employeeId_idx`(`employeeId`),
-    INDEX `attendances_ambulanceId_idx`(`ambulanceId`),
-    INDEX `attendances_rosterId_idx`(`rosterId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
