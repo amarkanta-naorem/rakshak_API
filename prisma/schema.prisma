@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ShiftType {
-  Day_Shift   @map("Day Shift")
-  Night_Night @map("Night Night")
-}
-
 enum AttendanceStatus {
   Present
   Absent
@@ -135,16 +130,11 @@ model Attendance {
   roster      Roster?    @relation(fields: [rosterId], references: [id])
   rosterId    Int?
 
-  shiftType        ShiftType
-  shiftStart       String?
-  shiftEnd         String?
-  punchIn          String?
-  punchInLocation  String?
-  punchOut         String?
-  punchOutLocation String?
-  status           AttendanceStatus @default(Absent)
-  timeLogged       String?
-  date             String?
+  shiftType     String?
+  punchTime     String?
+  punchLocation String?
+  status        AttendanceStatus @default(Absent)
+  date          String?
 
   @@index([employeeId])
   @@index([ambulanceId])

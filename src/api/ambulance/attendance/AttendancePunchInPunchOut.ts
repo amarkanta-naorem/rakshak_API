@@ -11,36 +11,26 @@ interface AttendanceInsertBody {
   employeeId: number;
   ambulanceId?: number;
   rosterId?: number;
-  shiftType: 'Day_Shift' | 'Night_Night';
-  shiftStart: string; 
-  shiftEnd: string; 
-  punchIn?: string; 
-  punchInLocation?: string;
-  punchOut?: string; 
-  punchOutLocation?: string;
+  shiftType: string;
+  punchTime?: string; 
+  punchLocation?: string;
   status: 'Present' | 'Late' | 'Absent';
-  timeLogged?: string;
   date: string; 
 }
 
 router.post('/', upload.none(), async (req: Request<{}, {}, AttendanceInsertBody>, res: Response, next: NextFunction) => {
     try {
-      const { employeeId, ambulanceId, rosterId, shiftType, shiftStart, shiftEnd, punchIn, punchInLocation, punchOut, punchOutLocation, status, timeLogged, date } = req.body;
+      const { employeeId, ambulanceId, rosterId, shiftType, punchTime, punchLocation, status, date } = req.body;
 
       await prisma.attendance.create({
         data: {
           employeeId: Number(employeeId),
           ambulanceId: ambulanceId ? Number(ambulanceId) : undefined,
           rosterId: rosterId ? Number(rosterId) : undefined,
-          shiftType,
-          shiftStart: shiftStart,
-          shiftEnd: shiftEnd,
-          punchIn: punchIn,
-          punchInLocation,
-          punchOut: punchOut,
-          punchOutLocation,
+          shiftType: shiftType,
+          punchTime: punchTime,
+          punchLocation: punchLocation,
           status,
-          timeLogged,
           date: date,
         },
       });
