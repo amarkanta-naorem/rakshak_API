@@ -9,7 +9,7 @@ interface AttendanceRecord {
   status: string;
   reason: string;
   punchIn: string;
-  punchOut: string;
+  punchOut: string | null; // Changed from string to string | null
   totalWorkingHour: number;
   ambulanceNumber: string;
 }
@@ -63,19 +63,22 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         const completeRecord = records.find((r) => r.status === 'Complete');
 
         let punchIn = '';
-        let punchOut = '';
+        let punchOut: string | null = '';
         let totalWorkingHour = 0;
 
-        if (presentRecord?.punchTime && completeRecord?.punchTime) {
+        if (presentRecord?.punchTime) {
           punchIn = presentRecord.punchTime.split('|')[0] || '';
-          punchOut = completeRecord.punchTime.split('|')[0] || '';
-
-          if (punchIn && punchOut) {
-            const punchInDate = new Date(punchIn);
-            const punchOutDate = new Date(punchOut);
-            if (!isNaN(punchInDate.getTime()) && !isNaN(punchOutDate.getTime())) {
-              totalWorkingHour = (punchOutDate.getTime() - punchInDate.getTime()) / (1000 * 60 * 60);
-              totalWorkingHour = Number(totalWorkingHour.toFixed(2));
+          
+          if (completeRecord?.punchTime) {
+            punchOut = completeRecord.punchTime.split('|')[0] || '';
+            
+            if (punchIn && punchOut) {
+              const punchInDate = new Date(punchIn);
+              const punchOutDate = new Date(punchOut);
+              if (!isNaN(punchInDate.getTime()) && !isNaN(punchOutDate.getTime())) {
+                totalWorkingHour = (punchOutDate.getTime() - punchInDate.getTime()) / (1000 * 60 * 60);
+                totalWorkingHour = Number(totalWorkingHour.toFixed(2));
+              }
             }
           }
         }
