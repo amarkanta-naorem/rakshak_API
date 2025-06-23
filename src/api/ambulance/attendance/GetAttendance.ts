@@ -4,7 +4,6 @@ import { PrismaClient } from '@prisma/client';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Define interfaces for the response structure
 interface AttendanceRecord {
   date: string;
   status: string;
@@ -30,7 +29,6 @@ interface ResponseData {
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Fetch all employees with their category and attendance records
     const employees = await prisma.employee.findMany({
       include: {
         category: true,
@@ -42,13 +40,11 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       },
     });
 
-    // Structure the response with explicit type
     const response: ResponseData = {
       drivers: [],
       emts: [],
     };
 
-    // Process each employee
     for (const employee of employees) {
       const userRole = employee.category?.name.toLowerCase();
       if (!userRole || !['driver', 'emt'].includes(userRole)) continue;
@@ -59,7 +55,6 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         phoneNumber: employee.phoneNumber || '',
         userRole,
         attendance: employee.Attendance.map((att) => {
-          // Calculate total working hours
           let totalWorkingHour = 0;
           if (att.punchTime) {
             const [punchIn, punchOut] = att.punchTime.split('|');
@@ -83,7 +78,6 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         }),
       };
 
-      // Push to appropriate array based on userRole
       if (userRole === 'driver') {
         response.drivers.push(employeeData);
       } else if (userRole === 'emt') {
