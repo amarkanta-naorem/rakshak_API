@@ -49,33 +49,54 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       const userRole = employee.category?.name.toLowerCase();
       if (!userRole || !['driver', 'emt'].includes(userRole)) continue;
 
+      // Group attendance records by date
+      const attendanceByDate = new Map<string, any[]>();
+      for (const att of employee.Attendance) {
+        if (!att.date) continue;
+        attendanceByDate.set(att.date, [...(attendanceByDate.get(att.date) || []), att]);
+      }
+
+      // Process grouped attendance records
+      const attendanceRecords: AttendanceRecord[] = [];
+      for (const [date, records] of attendanceByDate) {
+        const presentRecord = records.find((r) => r.status === 'Present');
+        const completeRecord = records.find((r) => r.status === 'Complete');
+
+        let punchIn = '';
+        let punchOut = '';
+        let totalWorkingHour = 0;
+
+        if (presentRecord?.punchTime && completeRecord?.punchTime) {
+          punchIn = presentRecord.punchTime.split('|')[0] || '';
+          punchOut = completeRecord.punchTime.split('|')[0] || '';
+
+          if (punchIn && punchOut) {
+            const punchInDate = new Date(punchIn);
+            const punchOutDate = new Date(punchOut);
+            if (!isNaN(punchInDate.getTime()) && !isNaN(punchOutDate.getTime())) {
+              totalWorkingHour = (punchOutDate.getTime() - punchInDate.getTime()) / (1000 * 60 * 60);
+              totalWorkingHour = Number(totalWorkingHour.toFixed(2));
+            }
+          }
+        }
+
+        attendanceRecords.push({
+          date,
+          status: presentRecord && completeRecord ? 'Complete' : (presentRecord ? 'Present' : ''),
+          reason: '',
+          punchIn,
+          punchOut,
+          totalWorkingHour,
+          ambulanceNumber: presentRecord?.ambulance?.ambulanceNumber || completeRecord?.ambulance?.ambulanceNumber || '',
+        });
+      }
+
       const employeeData: EmployeeData = {
         id: `DRV${employee.id.toString().padStart(5, '0')}`,
         name: employee.name,
         phoneNumber: employee.phoneNumber || '',
         userRole,
-        attendance: employee.Attendance.map((att) => {
-          let totalWorkingHour = 0;
-          if (att.punchTime) {
-            const [punchIn, punchOut] = att.punchTime.split('|');
-            if (punchIn && punchOut) {
-              const punchInDate = new Date(punchIn);
-              const punchOutDate = new Date(punchOut);
-              totalWorkingHour = (punchOutDate.getTime() - punchInDate.getTime()) / (1000 * 60 * 60);
-              totalWorkingHour = Number(totalWorkingHour.toFixed(2));
-            }
-          }
-
-          return {
-            date: att.date || '',
-            status: att.status || '',
-            reason: '',
-            punchIn: att.punchTime?.split('|')[0] || '',
-            punchOut: att.punchTime?.split('|')[1] || '',
-            totalWorkingHour,
-            ambulanceNumber: att.ambulance?.ambulanceNumber || '',
-          } as AttendanceRecord;
-        }),
+        attendance: attendanceRecords,
       };
 
       if (userRole === 'driver') {
