@@ -6,8 +6,6 @@ import categories from './master/category/categories';
 import ambulances from './master/ambulance/ambulances';
 import insertEmployees from './master/employee/InsertEmployees';
 import bulkImportCategories from './master/category/import/bulkImport';
-import bulkImportRoster from './master/roster/import/BulkImportCurrentDayRoster';
-import GetCurrentDayRoster from './master/roster/GetCurrentDayRoster';
 
 import ambulanceLogin from './ambulance/auth/login';
 import allAmbulances from './ambulance/GetAllAmbulanceCredentials';
@@ -30,8 +28,6 @@ router.use('/master/categories', categories);
 router.use('/master/ambulance', ambulances);
 router.use('/master/employee', insertEmployees);
 router.use('/master/category/import', bulkImportCategories);
-router.use('/master/roster', GetCurrentDayRoster);
-router.use('/master/roster/import', bulkImportRoster);
 
 router.use('/ambulance/auth/login', ambulanceLogin);
 router.use('/ambulances/all', allAmbulances);

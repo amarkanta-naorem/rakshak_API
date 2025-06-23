@@ -23,13 +23,11 @@ model Category {
 
 model Employee {
   id               Int       @id @default(autoincrement())
+  employeeSystemId String    @unique
   name             String    @db.VarChar(100)
   phoneNumber      String?   @unique @db.VarChar(15)
   categoryId       Int?
   category         Category? @relation(fields: [categoryId], references: [id])
-  rostersAsManager Roster[]  @relation("RosterManager")
-  rostersAsEmt     Roster[]  @relation("RosterEmt")
-  rostersAsDriver  Roster[]  @relation("RosterDriver")
   awsFaceId        String?   @db.VarChar(255)
   faceImageData    String?   @db.LongText
   createdAt        DateTime  @default(now())
@@ -49,7 +47,6 @@ model Ambulance {
   zone            String?           @db.VarChar(50)
   location        String?           @db.VarChar(100)
   mdtMobileNumber String?           @unique @db.VarChar(20)
-  rosters         Roster[]
   devices         AmbulanceDevice[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime?
@@ -77,27 +74,6 @@ model AmbulanceDevice {
   @@map("ambulanceDevices")
 }
 
-model Roster {
-  id          Int        @id @default(autoincrement())
-  rosterDate  DateTime   @db.Date
-  shift       String     @db.VarChar(10)
-  ambulanceId Int?
-  managerId   Int?
-  emtId       Int?
-  driverId    Int?
-  ambulance   Ambulance? @relation(fields: [ambulanceId], references: [id])
-  manager     Employee?  @relation("RosterManager", fields: [managerId], references: [id])
-  emt         Employee?  @relation("RosterEmt", fields: [emtId], references: [id])
-  driver      Employee?  @relation("RosterDriver", fields: [driverId], references: [id])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime?
-  deletedAt   DateTime?
-
-  Attendance Attendance[]
-
-  @@map("rosters")
-}
-
 model AmbulanceLog {
   id                      Int              @id @default(autoincrement())
   ambulanceId             Int?
@@ -121,9 +97,7 @@ model Attendance {
   employeeId  Int
   ambulance   Ambulance? @relation(fields: [ambulanceId], references: [id])
   ambulanceId Int?
-  roster      Roster?    @relation(fields: [rosterId], references: [id])
-  rosterId    Int?
-
+  
   shiftType     String?
   punchTime     String?
   punchLocation String?

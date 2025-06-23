@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 const upload = multer();
 
 interface EmployeeRequestBody {
+    employeeSystemId?: string;
     name?: string;
     phoneNumber?: string;
     categoryName?: string;
@@ -15,7 +16,11 @@ interface EmployeeRequestBody {
 }
 
 function validateEmployeeRequest(req: Request<{}, {}, EmployeeRequestBody>, res: Response, next: NextFunction): Response | void {
-    const { name, phoneNumber, categoryName } = req.body;
+    const { employeeSystemId, name, phoneNumber, categoryName, faceImageData } = req.body;
+
+    if (!employeeSystemId || employeeSystemId.trim() === '') {
+        return res.status(400).json({ error: 'Employee ID is required.' });
+    }
 
     if (!name || name.trim() === '') {
         return res.status(400).json({ error: 'Employee name is required.' });
@@ -34,14 +39,22 @@ function validateEmployeeRequest(req: Request<{}, {}, EmployeeRequestBody>, res:
 
 router.post('/', upload.none(), validateEmployeeRequest, async (req: Request<{}, {}, EmployeeRequestBody>, res: Response) => {
     try {
-        const { name, phoneNumber, categoryName, awsFaceId, faceImageData } = req.body;
+        const { employeeSystemId, name, phoneNumber, categoryName, awsFaceId, faceImageData } = req.body;
 
-        const existingEmployee = await prisma.employee.findUnique({
+        const existingPhoneEmployee = await prisma.employee.findUnique({
             where: { phoneNumber: phoneNumber! },
         });
 
-        if (existingEmployee) {
+        if (existingPhoneEmployee) {
             return res.status(409).json({ error: 'Employee phone number already exists.' });
+        }
+
+        const existingSystemIdEmployee = await prisma.employee.findFirst({
+            where: { employeeSystemId },
+        });
+
+        if (existingSystemIdEmployee) {
+            return res.status(409).json({ error: 'Employee ID already exists.' });
         }
 
         const category = await prisma.category.findFirst({
@@ -56,17 +69,14 @@ router.post('/', upload.none(), validateEmployeeRequest, async (req: Request<{},
             return res.status(400).json({ error: `Category '${categoryName}' not found.` });
         }
 
-        if (faceImageData && typeof faceImageData !== 'string') {
-            return res.status(400).json({ error: 'Invalid face image data.' });
-        }
-
         const newEmployee = await prisma.employee.create({
             data: {
+                employeeSystemId: employeeSystemId!,
                 name: name!,
                 phoneNumber: phoneNumber!,
                 categoryId: category.id,
                 awsFaceId: awsFaceId || null,
-                faceImageData: faceImageData || null,
+                faceImageData: faceImageData!,
             },
             include: {
                 category: true,
@@ -82,6 +92,7 @@ router.post('/', upload.none(), validateEmployeeRequest, async (req: Request<{},
             details: error.message,
         });
     }
-});
+}
+);
 
 export default router;
