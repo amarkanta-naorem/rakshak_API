@@ -14,7 +14,8 @@ interface AttendanceRecord {
 }
 
 interface EmployeeData {
-  id: string;
+  id: number;
+  employeeSystemId: string;
   name: string;
   phoneNumber: string;
   userRole: string;
@@ -48,14 +49,12 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       const userRole = employee.category?.name.toLowerCase();
       if (!userRole || !['driver', 'emt'].includes(userRole)) continue;
 
-      // Group attendance records by date
       const attendanceByDate = new Map<string, any[]>();
       for (const att of employee.Attendance) {
         if (!att.date) continue;
         attendanceByDate.set(att.date, [...(attendanceByDate.get(att.date) || []), att]);
       }
 
-      // Process grouped attendance records
       const attendanceRecords: AttendanceRecord[] = [];
       for (const [date, records] of attendanceByDate) {
         const presentRecord = records.find((r) => r.status === 'Present');
@@ -93,7 +92,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       }
 
       const employeeData: EmployeeData = {
-        id: `DRV${employee.id.toString().padStart(5, '0')}`,
+        id: Number(employee.id),
+        employeeSystemId: employee.employeeSystemId,
         name: employee.name,
         phoneNumber: employee.phoneNumber || '',
         userRole,
