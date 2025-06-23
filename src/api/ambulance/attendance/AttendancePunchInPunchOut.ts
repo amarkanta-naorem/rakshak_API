@@ -10,7 +10,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 interface AttendanceInsertBody {
   employeeId: number;
   ambulanceId?: number;
-  rosterId?: number;
   shiftType: string;
   punchTime?: string; 
   punchLocation?: string;
@@ -20,13 +19,12 @@ interface AttendanceInsertBody {
 
 router.post('/', upload.none(), async (req: Request<{}, {}, AttendanceInsertBody>, res: Response, next: NextFunction) => {
     try {
-      const { employeeId, ambulanceId, rosterId, shiftType, punchTime, punchLocation, status, date } = req.body;
+      const { employeeId, ambulanceId, shiftType, punchTime, punchLocation, status, date } = req.body;
 
       await prisma.attendance.create({
         data: {
           employeeId: Number(employeeId),
           ambulanceId: ambulanceId ? Number(ambulanceId) : undefined,
-          rosterId: rosterId ? Number(rosterId) : undefined,
           shiftType: shiftType,
           punchTime: punchTime,
           punchLocation: punchLocation,

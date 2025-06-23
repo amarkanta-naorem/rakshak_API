@@ -7,9 +7,8 @@ const prisma = new PrismaClient();
 interface AttendanceRecord {
   date: string;
   status: string;
-  reason: string;
   punchIn: string;
-  punchOut: string | null; // Changed from string to string | null
+  punchOut: string | null;
   totalWorkingHour: number;
   ambulanceNumber: string;
 }
@@ -86,7 +85,6 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         attendanceRecords.push({
           date,
           status: presentRecord && completeRecord ? 'Complete' : (presentRecord ? 'Present' : ''),
-          reason: '',
           punchIn,
           punchOut,
           totalWorkingHour,
