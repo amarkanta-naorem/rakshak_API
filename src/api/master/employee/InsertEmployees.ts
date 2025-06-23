@@ -34,6 +34,10 @@ function validateEmployeeRequest(req: Request<{}, {}, EmployeeRequestBody>, res:
         return res.status(400).json({ error: 'Employee role is required.' });
     }
 
+    if (faceImageData && Buffer.from(faceImageData, 'base64').length > 10 * 1024 * 1024) { // 10MB limit
+        return res.status(400).json({ error: 'Image data too large.' });
+    }
+
     next();
 }
 
