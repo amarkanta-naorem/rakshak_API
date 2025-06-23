@@ -9,6 +9,8 @@ interface AttendanceRecord {
   status: string;
   punchIn: string;
   punchOut: string | null;
+  punchInLocation: string;
+  punchOutLocation: string;
   totalWorkingHour: number;
   ambulanceNumber: string;
 }
@@ -61,34 +63,42 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         const completeRecord = records.find((r) => r.status === 'Complete');
 
         let punchIn = '';
-        let punchOut: string | null = '';
+        let punchOut: string | null = null;
         let totalWorkingHour = 0;
+        let punchInLocation = '';
+        let punchOutLocation = '';
 
         if (presentRecord?.punchTime) {
           punchIn = presentRecord.punchTime.split('|')[0] || '';
-          
-          if (completeRecord?.punchTime) {
-            punchOut = completeRecord.punchTime.split('|')[0] || '';
+          punchInLocation = presentRecord.punchLocation || '';
+        }
+
+        if (completeRecord?.punchTime && punchIn && punchIn !== '') {
+          punchOut = completeRecord.punchTime.split('|')[0] || '';
+          if (punchOut && punchOut !== '') {
+            punchOutLocation = completeRecord.punchLocation || '';
             
-            if (punchIn && punchOut) {
-              const punchInDate = new Date(punchIn);
-              const punchOutDate = new Date(punchOut);
-              if (!isNaN(punchInDate.getTime()) && !isNaN(punchOutDate.getTime())) {
-                totalWorkingHour = (punchOutDate.getTime() - punchInDate.getTime()) / (1000 * 60 * 60);
-                totalWorkingHour = Number(totalWorkingHour.toFixed(2));
-              }
+            const punchInDate = new Date(punchIn);
+            const punchOutDate = new Date(punchOut);
+            if (!isNaN(punchInDate.getTime()) && !isNaN(punchOutDate.getTime())) {
+              totalWorkingHour = (punchOutDate.getTime() - punchInDate.getTime()) / (1000 * 60 * 60);
+              totalWorkingHour = Number(totalWorkingHour.toFixed(2));
             }
           }
         }
 
-        attendanceRecords.push({
-          date,
-          status: presentRecord && completeRecord ? 'Complete' : (presentRecord ? 'Present' : ''),
-          punchIn,
-          punchOut,
-          totalWorkingHour,
-          ambulanceNumber: presentRecord?.ambulance?.ambulanceNumber || completeRecord?.ambulance?.ambulanceNumber || '',
-        });
+        if (punchIn || punchOut) {
+          attendanceRecords.push({
+            date,
+            status: presentRecord && completeRecord && punchIn && punchOut && punchIn !== '' && punchOut !== '' ? 'Complete' : (presentRecord ? 'Present' : ''),
+            punchIn,
+            punchOut,
+            punchInLocation,
+            punchOutLocation,
+            totalWorkingHour,
+            ambulanceNumber: presentRecord?.ambulance?.ambulanceNumber || completeRecord?.ambulance?.ambulanceNumber || '',
+          });
+        }
       }
 
       const employeeData: EmployeeData = {
@@ -110,6 +120,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     return res.status(200).json(response);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error(errorMessage);
     return res.status(500).json({ message: `Failed to fetch attendance records: ${errorMessage}` });
   } finally {
     await prisma.$disconnect();
