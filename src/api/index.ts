@@ -15,6 +15,7 @@ import insertAmbulanceDevices from './ambulance/ambulanceDevice/InsertAmbulanceD
 import GetAmbulanceEmployeeDetails from './ambulance/GetAmbulanceEmployeeDetails';
 
 import PunchInPunchOutAttendance from './ambulance/attendance/AttendancePunchInPunchOut';
+import GetAttendance from './ambulance/attendance/GetAttendance';
 
 const router = express.Router();
 
@@ -37,6 +38,7 @@ router.use('/ambulance/device', insertAmbulanceDevices);
 router.use('/ambulance/employees', GetAmbulanceEmployeeDetails);
 
 router.use('/attendance', PunchInPunchOutAttendance);
+router.use('/attendance', GetAttendance);
 
 
 export default router;
