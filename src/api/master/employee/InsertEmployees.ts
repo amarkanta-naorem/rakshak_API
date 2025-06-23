@@ -16,7 +16,7 @@ interface EmployeeRequestBody {
 }
 
 function validateEmployeeRequest(req: Request<{}, {}, EmployeeRequestBody>, res: Response, next: NextFunction): Response | void {
-    const { employeeSystemId, name, phoneNumber, categoryName, faceImageData } = req.body;
+    const { employeeSystemId, name, phoneNumber, categoryName } = req.body;
 
     if (!employeeSystemId || employeeSystemId.trim() === '') {
         return res.status(400).json({ error: 'Employee ID is required.' });
@@ -32,10 +32,6 @@ function validateEmployeeRequest(req: Request<{}, {}, EmployeeRequestBody>, res:
 
     if (!categoryName || categoryName.trim() === '') {
         return res.status(400).json({ error: 'Employee role is required.' });
-    }
-
-    if (faceImageData && Buffer.from(faceImageData, 'base64').length > 10 * 1024 * 1024) { // 10MB limit
-        return res.status(400).json({ error: 'Image data too large.' });
     }
 
     next();
