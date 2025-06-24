@@ -59,8 +59,14 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
       const attendanceRecords: AttendanceRecord[] = [];
       for (const [date, records] of attendanceByDate) {
-        const presentRecord = records.find((r) => r.status === 'Present');
-        const completeRecord = records.find((r) => r.status === 'Complete');
+        const sortedRecords = [...records].sort((a, b) => {
+          const timeA = a.punchTime ? new Date(a.punchTime).getTime() : 0;
+          const timeB = b.punchTime ? new Date(b.punchTime).getTime() : 0;
+          return timeA - timeB;
+        });
+
+        const firstPunchInRecord = sortedRecords.find((r) => r.status === 'PunchIn');
+        const lastRecord = sortedRecords[sortedRecords.length - 1];
 
         let punchIn = '';
         let punchOut: string | null = null;
@@ -68,16 +74,16 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         let punchInLocation = '';
         let punchOutLocation = '';
 
-        if (presentRecord?.punchTime) {
-          punchIn = presentRecord.punchTime.split('|')[0] || '';
-          punchInLocation = presentRecord.punchLocation || '';
+        if (firstPunchInRecord?.punchTime) {
+          punchIn = firstPunchInRecord.punchTime.split('|')[0] || '';
+          punchInLocation = firstPunchInRecord.punchLocation || '';
         }
 
-        if (completeRecord?.punchTime && punchIn && punchIn !== '') {
-          punchOut = completeRecord.punchTime.split('|')[0] || '';
+        if (lastRecord?.status === 'PunchOut' && lastRecord?.punchTime && punchIn && punchIn !== '') {
+          punchOut = lastRecord.punchTime.split('|')[0] || '';
+          punchOutLocation = lastRecord.punchLocation || '';
+
           if (punchOut && punchOut !== '') {
-            punchOutLocation = completeRecord.punchLocation || '';
-            
             const punchInDate = new Date(punchIn);
             const punchOutDate = new Date(punchOut);
             if (!isNaN(punchInDate.getTime()) && !isNaN(punchOutDate.getTime())) {
@@ -90,13 +96,13 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         if (punchIn || punchOut) {
           attendanceRecords.push({
             date,
-            status: presentRecord && completeRecord && punchIn && punchOut && punchIn !== '' && punchOut !== '' ? 'Complete' : (presentRecord ? 'Present' : ''),
+            status: firstPunchInRecord && lastRecord?.status === 'PunchOut' && punchIn && punchOut && punchIn !== '' && punchOut !== '' ? 'PunchOut' : firstPunchInRecord || lastRecord?.status === 'PunchIn' ? 'PunchIn' : '',
             punchIn,
             punchOut,
             punchInLocation,
             punchOutLocation,
             totalWorkingHour,
-            ambulanceNumber: presentRecord?.ambulance?.ambulanceNumber || completeRecord?.ambulance?.ambulanceNumber || '',
+            ambulanceNumber: firstPunchInRecord?.ambulance?.ambulanceNumber || lastRecord?.ambulance?.ambulanceNumber || '',
           });
         }
       }
