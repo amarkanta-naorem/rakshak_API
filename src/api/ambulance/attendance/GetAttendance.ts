@@ -25,8 +25,13 @@ interface EmployeeData {
 }
 
 interface ResponseData {
-  drivers: EmployeeData[];
+  supervisors: EmployeeData[];
   emts: EmployeeData[];
+  drivers: EmployeeData[];
+  ambulances: EmployeeData[];
+  rexpress: EmployeeData[];
+  office: EmployeeData[];
+  others: EmployeeData[];
 }
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
@@ -43,13 +48,18 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     });
 
     const response: ResponseData = {
-      drivers: [],
+      supervisors: [],
       emts: [],
+      drivers: [],
+      ambulances: [],
+      rexpress: [],
+      office: [],
+      others: [],
     };
 
     for (const employee of employees) {
       const userRole = employee.category?.name.toLowerCase();
-      if (!userRole || !['driver', 'emt'].includes(userRole)) continue;
+      if (!userRole || !['supervisor', 'emt', 'driver', 'ambulance', 'rexpress', 'office', 'others'].includes(userRole)) continue;
 
       const attendanceByDate = new Map<string, any[]>();
       for (const att of employee.Attendance) {
@@ -116,10 +126,28 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         attendance: attendanceRecords,
       };
 
-      if (userRole === 'driver') {
-        response.drivers.push(employeeData);
-      } else if (userRole === 'emt') {
-        response.emts.push(employeeData);
+      switch (userRole) {
+        case 'supervisor':
+          response.supervisors.push(employeeData);
+          break;
+        case 'emt':
+          response.emts.push(employeeData);
+          break;
+        case 'driver':
+          response.drivers.push(employeeData);
+          break;
+        case 'ambulance':
+          response.ambulances.push(employeeData);
+          break;
+        case 'rexpress':
+          response.rexpress.push(employeeData);
+          break;
+        case 'office':
+          response.office.push(employeeData);
+          break;
+        case 'others':
+          response.others.push(employeeData);
+          break;
       }
     }
 
