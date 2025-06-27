@@ -14,12 +14,13 @@ interface AttendanceInsertBody {
   punchTime?: string; 
   punchLocation?: string;
   status: string;
+  deviceMode: any;
   date: string; 
 }
 
 router.post('/', upload.none(), async (req: Request<{}, {}, AttendanceInsertBody>, res: Response, next: NextFunction) => {
     try {
-      const { employeeId, ambulanceId, shiftType, punchTime, punchLocation, status, date } = req.body;
+      const { employeeId, ambulanceId, shiftType, punchTime, punchLocation, status, deviceMode, date } = req.body;
 
       await prisma.attendance.create({
         data: {
@@ -29,6 +30,7 @@ router.post('/', upload.none(), async (req: Request<{}, {}, AttendanceInsertBody
           punchTime: punchTime,
           punchLocation: punchLocation,
           status,
+          deviceMode: deviceMode,
           date: date,
         },
       });

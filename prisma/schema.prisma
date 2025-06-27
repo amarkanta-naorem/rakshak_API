@@ -91,6 +91,11 @@ model AmbulanceLog {
   @@map("ambulanceLogs")
 }
 
+enum DeviceMode {
+  Online
+  Offline
+}
+
 model Attendance {
   id          Int        @id @default(autoincrement())
   employee    Employee   @relation(fields: [employeeId], references: [id])
@@ -102,6 +107,7 @@ model Attendance {
   punchTime     String?
   punchLocation String?
   status        String?
+  deviceMode    DeviceMode @default(Online)
   date          String?
 
   @@map("attendances")
