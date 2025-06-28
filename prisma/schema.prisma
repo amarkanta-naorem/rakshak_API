@@ -96,19 +96,26 @@ enum DeviceMode {
   Offline
 }
 
+enum ResponseStatus {
+  Success
+  Failure
+}
+
 model Attendance {
   id          Int        @id @default(autoincrement())
   employee    Employee   @relation(fields: [employeeId], references: [id])
   employeeId  Int
   ambulance   Ambulance? @relation(fields: [ambulanceId], references: [id])
   ambulanceId Int?
-  
-  shiftType     String?
-  punchTime     String?
-  punchLocation String?
-  status        String?
-  deviceMode    DeviceMode @default(Online)
-  date          String?
+
+  shiftType      String?
+  punchTime      String?
+  punchLocation  String?
+  status         String?
+  deviceMode     DeviceMode     @default(Online)
+  imageCapture   String?
+  date           String?
+  responseStatus ResponseStatus @default(Success)
 
   @@map("attendances")
 }

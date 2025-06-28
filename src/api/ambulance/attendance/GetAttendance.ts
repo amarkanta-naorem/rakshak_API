@@ -11,6 +11,8 @@ interface AttendanceRecord {
   status: string | null;
   deviceMode: any;
   date: string;
+  imageCapture: any;
+  responseStatus: string;
   shiftType: string | null;
 }
 
@@ -66,6 +68,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
             deviceMode: true,
             date: true,
             shiftType: true,
+            imageCapture: true,
+            responseStatus: true,
             ambulance: {
               select: {
                 ambulanceNumber: true,
@@ -113,6 +117,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         deviceMode: att.deviceMode,
         date: att.date || '',
         shiftType: att.shiftType || '',
+        imageCapture: att.imageCapture || '',
+        responseStatus: att.responseStatus || '',
       })),
     }));
 

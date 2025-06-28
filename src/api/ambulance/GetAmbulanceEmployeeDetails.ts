@@ -1,6 +1,5 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import multer from 'multer';
 
 interface EmployeeWithCategory {
   employeeId: number;
@@ -16,7 +15,6 @@ interface EmployeeWithCategory {
 
 const prisma = new PrismaClient();
 const router = express.Router();
-const upload = multer(); 
 
 router.get('/', async (req, res) => {
   try {
@@ -45,6 +43,7 @@ router.get('/', async (req, res) => {
       employeeId: emp.id,
       employeeSystemId: emp.employeeSystemId,
       name: emp.name,
+      phoneNumber: emp.phoneNumber,
       awsFaceId: emp.awsFaceId,
       faceImageData: emp.faceImageData ? emp.faceImageData : null,
       categoryName: emp.category?.name ?? null,

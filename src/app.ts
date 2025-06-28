@@ -6,6 +6,7 @@ import cors from 'cors';
 import * as middlewares from './middlewares';
 import api from './api';
 import MessageResponse from './interfaces/MessageResponse';
+import path from 'path';
 
 require('dotenv').config();
 
@@ -26,6 +27,13 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
 app.use(express.json());
+
+const getUploadDir = () => {
+  return process.env.UPLOAD_DIR || path.join(__dirname, '..', '..', 'uploads', 'attendance');
+};
+
+const uploadPath = getUploadDir();
+app.use('/api/v1/uploads', express.static(uploadPath));
 
 app.get<{}, MessageResponse>('/', (req, res) => {
   res.json({ message: 'API is working'});
