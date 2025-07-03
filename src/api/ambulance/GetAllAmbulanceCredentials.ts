@@ -20,6 +20,7 @@ router.get<{}, AmbulanceResponse[] | { error: string }>("/", async (req, res) =>
             select: {
               username: true,
               password: true,
+              imei: true
             },
             orderBy: { createdAt: "desc" },
             take: 1,
@@ -29,6 +30,7 @@ router.get<{}, AmbulanceResponse[] | { error: string }>("/", async (req, res) =>
 
       const response: AmbulanceResponse[] = ambulances.map((ambulance) => ({
         ambulanceNumber: ambulance.ambulanceNumber,
+        imei: ambulance.devices[0]?.imei ?? null,
         username: ambulance.devices[0]?.username ?? null,
         password: ambulance.devices[0]?.password ?? null
       }));

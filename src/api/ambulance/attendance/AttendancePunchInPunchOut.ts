@@ -10,10 +10,6 @@ try {
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
-  
-  const testFile = path.join(uploadDir, `perm-test-${Date.now()}.txt`);
-  fs.writeFileSync(testFile, 'Permission test');
-  fs.unlinkSync(testFile);
 } catch (err) {
   console.error(`FATAL: Could not initialize upload directory at ${uploadDir}`, err);
   process.exit(1);
