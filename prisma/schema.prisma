@@ -60,16 +60,18 @@ model Ambulance {
 }
 
 model AmbulanceDevice {
-  id           Int            @id @default(autoincrement())
-  ambulanceId  Int?
-  ambulance    Ambulance?     @relation(fields: [ambulanceId], references: [id])
-  imei         String         @unique @db.VarChar(50)
-  username     String         @unique @db.VarChar(255)
-  password     String         @db.Text
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime?
-  deletedAt    DateTime?
-  AmbulanceLog AmbulanceLog[]
+  id                Int            @id @default(autoincrement())
+  ambulanceId       Int?
+  ambulance         Ambulance?     @relation(fields: [ambulanceId], references: [id])
+  imei              String         @unique @db.VarChar(50)
+  username          String         @unique @db.VarChar(255)
+  password          String         @db.Text
+  currentAppVersion String         @default("0")
+  latestAppVersion  String         @default("0")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime?
+  deletedAt         DateTime?
+  AmbulanceLog      AmbulanceLog[]
 
   @@map("ambulanceDevices")
 }

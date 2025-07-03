@@ -16,6 +16,8 @@ import GetAmbulanceEmployeeDetails from './ambulance/GetAmbulanceEmployeeDetails
 import PunchInPunchOutAttendance from './ambulance/attendance/AttendancePunchInPunchOut';
 import GetAttendance from './ambulance/attendance/GetAttendance';
 
+import AppVersionService from './ambulance/ambulanceDevice/AppVersionService';
+
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
@@ -37,6 +39,8 @@ router.use('/ambulance/employees', GetAmbulanceEmployeeDetails);
 
 router.use('/attendance', PunchInPunchOutAttendance);
 router.use('/attendance', GetAttendance);
+
+router.use('/ambulance/device', AppVersionService);
 
 
 export default router;
