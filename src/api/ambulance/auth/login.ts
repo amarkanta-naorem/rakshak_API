@@ -22,6 +22,10 @@ interface AmbulanceDevice {
 interface LoginRequestBody {
   ambulanceNumber: string;
   password: string;
+  androidDeviceId?: string;
+  manufacturer?: string;
+  deviceModelName?: string;
+  deviceToken?: string;
 }
 
 interface LoginResponse {
@@ -75,7 +79,7 @@ router.get<{}, MessageResponse>('/', async (req, res) => {
 });
 
 router.post<{}, MessageResponse, LoginRequestBody>('/', upload.none(), async (req, res) => {
-  const { ambulanceNumber, password } = req.body;
+  const { ambulanceNumber, password, androidDeviceId, manufacturer, deviceModelName, deviceToken } = req.body;
 
   if (!ambulanceNumber) {
     return res.status(400).json({ error: 'Ambulance number are required' });
@@ -121,15 +125,47 @@ router.post<{}, MessageResponse, LoginRequestBody>('/', upload.none(), async (re
       return res.status(401).json({ error: 'Invalid ambulance number or password' });
     }
 
+    const updatedDevice = await prisma.ambulanceDevice.update({
+      where: { id: ambulanceDevice.id },
+      data: {
+        androidDeviceId: androidDeviceId || null,
+        manufacturer: manufacturer || null,
+        deviceModelName: deviceModelName || null,
+        deviceToken: deviceToken || null,
+        deviceLoginAt: new Date(Date.now()),
+      },
+      select: {
+        id: true,
+        imei: true,
+        username: true,
+        androidDeviceId: true,
+        manufacturer: true,
+        deviceModelName: true,
+        deviceToken: true,
+        deviceLoginAt: true,
+        ambulance: {
+          select: {
+            id: true,
+            type: true,
+            callSign: true,
+            ambulanceNumber: true,
+            zone: true,
+            location: true,
+            mdtMobileNumber: true,
+          },
+        },
+      },
+    });
+
     const response: LoginResponse = {
       status: 200,
       message: 'Login successful',
       ambulanceDevice: {
-        id: ambulanceDevice.id,
-        imei: ambulanceDevice.imei,
-        username: ambulanceDevice.username,
-        ambulance: ambulanceDevice.ambulance,
-      }
+        id: updatedDevice.id,
+        imei: updatedDevice.imei,
+        username: updatedDevice.username,
+        ambulance: updatedDevice.ambulance,
+      },
     };
 
     res.status(200).json({ data: response });

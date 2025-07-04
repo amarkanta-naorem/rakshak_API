@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = "mysql://amar54:amar54999@203.115.101.54:3306/rakshak"
 }
 
 model Category {
@@ -66,6 +66,11 @@ model AmbulanceDevice {
   imei              String         @unique @db.VarChar(50)
   username          String         @unique @db.VarChar(255)
   password          String         @db.Text
+  androidDeviceId   String?         @db.VarChar(255)
+  manufacturer      String?         @db.VarChar(255)
+  deviceModelName   String?         @db.VarChar(255)
+  deviceToken       String?         @db.Text
+  deviceLoginAt     DateTime?
   currentAppVersion String         @default("0")
   latestAppVersion  String         @default("0")
   createdAt         DateTime       @default(now())
