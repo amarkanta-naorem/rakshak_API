@@ -41,6 +41,7 @@ model Employee {
 
 model Ambulance {
   id              Int               @id @default(autoincrement())
+  sysServiceId    String?           @db.VarChar(150)
   type            String?           @db.VarChar(50)
   callSign        String?           @unique @db.VarChar(50)
   ambulanceNumber String?           @unique @db.VarChar(50)
@@ -54,7 +55,8 @@ model Ambulance {
   currentLogs     AmbulanceLog[]    @relation("CurrentAmbulance")
   lastLogs        AmbulanceLog[]    @relation("LastAmbulance")
 
-  Attendance Attendance[]
+  Attendance       Attendance[]
+  AmbulanceFuelLog AmbulanceFuelLog[]
 
   @@map("ambulances")
 }
@@ -66,10 +68,10 @@ model AmbulanceDevice {
   imei              String         @unique @db.VarChar(50)
   username          String         @unique @db.VarChar(255)
   password          String         @db.Text
-  androidDeviceId   String?         @db.VarChar(255)
-  manufacturer      String?         @db.VarChar(255)
-  deviceModelName   String?         @db.VarChar(255)
-  deviceToken       String?         @db.Text
+  androidDeviceId   String?        @db.VarChar(255)
+  manufacturer      String?        @db.VarChar(255)
+  deviceModelName   String?        @db.VarChar(255)
+  deviceToken       String?        @db.Text
   deviceLoginAt     DateTime?
   currentAppVersion String         @default("0")
   latestAppVersion  String         @default("0")
@@ -125,4 +127,27 @@ model Attendance {
   responseStatus ResponseStatus @default(Success)
 
   @@map("attendances")
+}
+
+model AmbulanceFuelLog {
+  id                         Int        @id @default(autoincrement())
+  ambulanceId                Int?
+  ambulance                  Ambulance? @relation(fields: [ambulanceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invoiceFileUrl             String     @db.Text
+  fuelType                   String     @db.VarChar(100)
+  softwareReadingLitres      String     @db.VarChar(100)
+  softwareReadingUnitPrice   String     @db.VarChar(100)
+  softwareReadingTotalAmount String     @db.VarChar(100)
+  manualReadingLitres        String     @db.VarChar(100)
+  manualReadingUnitPrice     String     @db.VarChar(100)
+  manualReadingTotalAmount   String     @db.VarChar(100)
+  fuelDateTime               String     @db.VarChar(100)
+  location                   String     @db.VarChar(255)
+  latitude                   String     @db.VarChar(255)
+  longitude                  String     @db.VarChar(255)
+  createdAt                  DateTime   @default(now())
+  updatedAt                  DateTime?
+  deletedAt                  DateTime?
+
+  @@map("ambulancefuellogs")
 }

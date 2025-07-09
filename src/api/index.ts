@@ -17,6 +17,10 @@ import PunchInPunchOutAttendance from './ambulance/attendance/AttendancePunchInP
 import GetAttendance from './ambulance/attendance/GetAttendance';
 
 import AppVersionService from './ambulance/ambulanceDevice/AppVersionService';
+import AmbulanceLoginRecord from './ambulance/AmbulanceLoginRecord';
+
+import AmbulanceFuelLog from './ambulance/fuel/AmbulanceFuelLog';
+import AmbulanceFuelAlertInsert from './ambulance/fuel/AmbulanceFuelAlertInsert';
 
 const router = express.Router();
 
@@ -41,6 +45,9 @@ router.use('/attendance', PunchInPunchOutAttendance);
 router.use('/attendance', GetAttendance);
 
 router.use('/ambulance/device', AppVersionService);
+router.use('/ambulance/login/records', AmbulanceLoginRecord);
 
+router.use('/ambulance/fuel/record', AmbulanceFuelLog);
+router.use('/ambulance/fuel/alert', AmbulanceFuelAlertInsert);
 
 export default router;

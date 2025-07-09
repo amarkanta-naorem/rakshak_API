@@ -13,7 +13,12 @@ const router = express.Router();
 router.get<{}, AmbulanceResponse[] | { error: string }>("/", async (req, res) => {
     try {
       const ambulances = await prisma.ambulance.findMany({
-        where: { deletedAt: null },
+        where: {
+          deletedAt: null,
+          devices: {
+            some: {}
+          }
+        },
         select: {
           ambulanceNumber: true,
           devices: {

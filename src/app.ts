@@ -34,6 +34,8 @@ const getUploadDir = () => {
 
 const uploadPath = getUploadDir();
 app.use('/api/v1/uploads', express.static(uploadPath));
+app.use('/api/v1/uploads/fuel_invoice', express.static(path.join(__dirname, '..', 'uploads', 'fuel_invoice')));
+
 
 app.get<{}, MessageResponse>('/', (req, res) => {
   res.json({ message: 'API is working'});
