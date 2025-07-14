@@ -16,7 +16,7 @@ app.use(morgan('dev'));
 app.use(helmet());
 app.use(cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ['http://localhost:3000', 'http://203.115.101.51:3535'];
+      const allowedOrigins = ['http://localhost:3000', 'http://localhost:3535', 'http://203.115.101.51:3535'];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {

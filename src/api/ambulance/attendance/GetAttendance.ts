@@ -47,7 +47,9 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
   try {
     const employeesPromise = prisma.employee.findMany({
-      where: {},
+      where: {
+        deletedAt: null,
+      },
       select: {
         id: true,
         employeeSystemId: true,
