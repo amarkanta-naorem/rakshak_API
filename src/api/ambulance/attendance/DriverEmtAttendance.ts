@@ -92,7 +92,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 
       const currentEmployee = await prisma.employee.findUnique({
         where: { id: Number(employeeId) },
-        select: { categoryId: true }
+        select: { categoryId: true, name: true }
       });
 
       if (!currentEmployee) {
@@ -119,6 +119,11 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
                 punchTime: group._max.punchTime,
                 ambulanceId: Number(ambulanceId),
                 date: date
+              },
+              include: {
+                employee: {
+                  select: { categoryId: true }
+                }
               }
             });
           }));
@@ -129,6 +134,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
           record?.status === 'PunchIn' && 
           record.punchOutType === 'manual' && 
           record.employeeId !== Number(employeeId) && 
+          record.employee?.categoryId === currentEmployee.categoryId && // Check if categories match
           !employeeLatestRecords.some(r => 
             r?.employeeId === record.employeeId && 
             r.punchTime != null && record.punchTime != null && 
@@ -176,12 +182,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 
       responseRecords.unshift(newAttendance);
 
-      const employee = await prisma.employee.findUnique({
-        where: { id: Number(employeeId) },
-        select: { name: true }
-      });
-
-      const employeeName = employee?.name || 'Employee';
+      const employeeName = currentEmployee.name || 'Employee';
 
       let message = `${employeeName} has successfully recorded manual attendance.`;
       if (responseRecords.length > 1) {
