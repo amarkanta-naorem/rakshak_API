@@ -110,6 +110,11 @@ enum ResponseStatus {
   Failure
 }
 
+enum PunchOutType {
+  manual
+  auto
+}
+
 model Attendance {
   id          Int        @id @default(autoincrement())
   employee    Employee   @relation(fields: [employeeId], references: [id])
@@ -121,6 +126,7 @@ model Attendance {
   punchTime      String?
   punchLocation  String?
   status         String?
+  punchOutType   PunchOutType   @default(manual)
   deviceMode     DeviceMode     @default(Online)
   imageCapture   String?
   date           String?

@@ -8,6 +8,7 @@ import fetchEmployee from './master/employee/FetchEmployees';
 import insertEmployees from './master/employee/InsertEmployees';
 import updateEmployees from './master/employee/UpdateEmployee';
 import deleteEmployees from './master/employee/DeleteEmployee';
+// import fetchSoftDetedEmployees from './master/employee/FetchSoftDeletedEmployees';
 import bulkImportCategories from './master/category/import/bulkImport';
 
 import ambulanceLogin from './ambulance/auth/login';
@@ -17,6 +18,7 @@ import insertAmbulanceDevices from './ambulance/ambulanceDevice/InsertAmbulanceD
 import GetAmbulanceEmployeeDetails from './ambulance/GetAmbulanceEmployeeDetails';
 
 import PunchInPunchOutAttendance from './ambulance/attendance/AttendancePunchInPunchOut';
+import DiverEmtAttendance from './ambulance/attendance/DriverEmtAttendance';
 import GetAttendance from './ambulance/attendance/GetAttendance';
 
 import AppVersionService from './ambulance/ambulanceDevice/AppVersionService';
@@ -39,6 +41,7 @@ router.use('/master/employee/all', fetchEmployee);
 router.use('/master/employee', insertEmployees);
 router.use('/master/employee', updateEmployees);
 router.use('/master/employee', deleteEmployees);
+// router.use('/master/employee/softdeleted', fetchSoftDetedEmployees);
 router.use('/master/category/import', bulkImportCategories);
 
 router.use('/ambulance/auth/login', ambulanceLogin);
@@ -48,6 +51,7 @@ router.use('/ambulance/device', insertAmbulanceDevices);
 router.use('/ambulance/employees', GetAmbulanceEmployeeDetails);
 
 router.use('/attendance', PunchInPunchOutAttendance);
+router.use('/employee/attendance', DiverEmtAttendance);
 router.use('/attendance', GetAttendance);
 
 router.use('/ambulance/device', AppVersionService);
