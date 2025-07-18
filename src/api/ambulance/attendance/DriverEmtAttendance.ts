@@ -33,6 +33,12 @@ const upload = multer({
   limits: { fileSize: 1024 * 1024 * 1024 }
 });
 
+function formatDateToMySQLStyle(date: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+         `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 const router = express.Router();
 const prisma = new PrismaClient();
 
@@ -150,7 +156,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
               employeeId: existingAttendance.employeeId,
               ambulanceId: existingAttendance.ambulanceId,
               shiftType: existingAttendance.shiftType,
-              punchTime: new Date().toISOString(),
+              punchTime: formatDateToMySQLStyle(new Date()),
               punchLocation: existingAttendance.punchLocation,
               status: 'PunchOut',
               deviceMode: existingAttendance.deviceMode,
