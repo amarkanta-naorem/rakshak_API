@@ -19,6 +19,7 @@ import GetAmbulanceEmployeeDetails from './ambulance/GetAmbulanceEmployeeDetails
 
 import PunchInPunchOutAttendance from './ambulance/attendance/AttendancePunchInPunchOut';
 import DiverEmtAttendance from './ambulance/attendance/DriverEmtAttendance';
+import DiverEmtAttendanceWithSystemAutoOut from './ambulance/attendance/DriverEmtAttendanceWithSystemAutoOut';
 import GetAttendance from './ambulance/attendance/GetAttendance';
 
 import AppVersionService from './ambulance/ambulanceDevice/AppVersionService';
@@ -52,6 +53,7 @@ router.use('/ambulance/employees', GetAmbulanceEmployeeDetails);
 
 router.use('/attendance', PunchInPunchOutAttendance);
 router.use('/employee/attendance', DiverEmtAttendance);
+router.use('/employee/attendance/latest', DiverEmtAttendanceWithSystemAutoOut);
 router.use('/attendance', GetAttendance);
 
 router.use('/ambulance/device', AppVersionService);

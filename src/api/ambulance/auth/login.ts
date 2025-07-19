@@ -146,6 +146,7 @@ router.post<{}, MessageResponse, LoginRequestBody>('/', upload.none(), async (re
         ambulance: {
           select: {
             id: true,
+            sysServiceId: true,
             type: true,
             callSign: true,
             ambulanceNumber: true,
