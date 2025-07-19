@@ -41,14 +41,6 @@ router.post('/', upload.none(), validateEmployeeRequest, async (req: Request<{},
     try {
         const { employeeSystemId, name, phoneNumber, categoryName, awsFaceId, faceImageData } = req.body;
 
-        const existingPhoneEmployee = await prisma.employee.findUnique({
-            where: { phoneNumber: phoneNumber! },
-        });
-
-        if (existingPhoneEmployee) {
-            return res.status(409).json({ error: 'Employee phone number already exists.' });
-        }
-
         const existingSystemIdEmployee = await prisma.employee.findFirst({
             where: { employeeSystemId },
         });

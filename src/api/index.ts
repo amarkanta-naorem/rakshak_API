@@ -8,7 +8,6 @@ import fetchEmployee from './master/employee/FetchEmployees';
 import insertEmployees from './master/employee/InsertEmployees';
 import updateEmployees from './master/employee/UpdateEmployee';
 import deleteEmployees from './master/employee/DeleteEmployee';
-// import fetchSoftDetedEmployees from './master/employee/FetchSoftDeletedEmployees';
 import bulkImportCategories from './master/category/import/bulkImport';
 
 import ambulanceLogin from './ambulance/auth/login';
@@ -42,7 +41,6 @@ router.use('/master/employee/all', fetchEmployee);
 router.use('/master/employee', insertEmployees);
 router.use('/master/employee', updateEmployees);
 router.use('/master/employee', deleteEmployees);
-// router.use('/master/employee/softdeleted', fetchSoftDetedEmployees);
 router.use('/master/category/import', bulkImportCategories);
 
 router.use('/ambulance/auth/login', ambulanceLogin);
