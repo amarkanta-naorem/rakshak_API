@@ -84,7 +84,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
         },
         include: {
           employee: {
-            select: { categoryId: true, name: true }
+            select: { categoryId: true, name: true, employeeSystemId: true }
           }
         }
       });
@@ -93,12 +93,14 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 
       // Handle case: Same employee PunchIn without PunchOut, now PunchOut from different ambulance
       if (existingAttendance && status === 'PunchOut' && ambulanceId && existingAttendance.ambulanceId !== Number(ambulanceId)) {
+        const autoPunchOutTime = new Date();
+        autoPunchOutTime.setMinutes(autoPunchOutTime.getMinutes() - 1);
         const autoPunchOut = await prisma.attendance.create({
           data: {
             employeeId: existingAttendance.employeeId,
             ambulanceId: existingAttendance.ambulanceId,
             shiftType: existingAttendance.shiftType,
-            punchTime: formatDateToMySQLStyle(new Date()),
+            punchTime: formatDateToMySQLStyle(autoPunchOutTime),
             punchLocation: existingAttendance.punchLocation,
             status: 'PunchOut',
             deviceMode: existingAttendance.deviceMode,
@@ -108,7 +110,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
             punchOutType: 'auto'
           },
           include: {
-            employee: { select: { name: true } },
+            employee: { select: { name: true, employeeSystemId: true } },
             ambulance: { select: { ambulanceNumber: true } }
           }
         });
@@ -120,6 +122,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
         responseRecords.push({
           id: autoPunchOut.id,
           employeeId: autoPunchOut.employeeId,
+          employeeSystemId: autoPunchOut.employee.employeeSystemId,
           ambulanceId: autoPunchOut.ambulanceId,
           shiftType: autoPunchOut.shiftType,
           punchTime: autoPunchOut.punchTime,
@@ -137,12 +140,14 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 
       // Handle case: Same employee PunchIn without PunchOut
       if (existingAttendance && status === 'PunchIn') {
+        const autoPunchOutTime = new Date();
+        autoPunchOutTime.setMinutes(autoPunchOutTime.getMinutes() - 1);
         const autoPunchOut = await prisma.attendance.create({
           data: {
             employeeId: existingAttendance.employeeId,
             ambulanceId: existingAttendance.ambulanceId,
             shiftType: existingAttendance.shiftType,
-            punchTime: formatDateToMySQLStyle(new Date()),
+            punchTime: formatDateToMySQLStyle(autoPunchOutTime),
             punchLocation: existingAttendance.punchLocation,
             status: 'PunchOut',
             deviceMode: existingAttendance.deviceMode,
@@ -152,7 +157,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
             punchOutType: 'auto'
           },
           include: {
-            employee: { select: { name: true } },
+            employee: { select: { name: true, employeeSystemId: true } },
             ambulance: { select: { ambulanceNumber: true } }
           }
         });
@@ -164,6 +169,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
         responseRecords.push({
           id: autoPunchOut.id,
           employeeId: autoPunchOut.employeeId,
+          employeeSystemId: autoPunchOut.employee.employeeSystemId,
           ambulanceId: autoPunchOut.ambulanceId,
           shiftType: autoPunchOut.shiftType,
           punchTime: autoPunchOut.punchTime,
@@ -186,7 +192,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 
       const currentEmployee = await prisma.employee.findUnique({
         where: { id: Number(employeeId) },
-        select: { categoryId: true, name: true }
+        select: { categoryId: true, name: true, employeeSystemId: true }
       });
 
       if (!currentEmployee) {
@@ -225,7 +231,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
               },
               include: {
                 employee: {
-                  select: { categoryId: true, name: true }
+                  select: { categoryId: true, name: true, employeeSystemId: true }
                 },
                 ambulance: {
                   select: { ambulanceNumber: true }
@@ -243,48 +249,67 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
           record.employee?.categoryId === currentEmployee.categoryId
         );
 
-        if (existingAttendanceWithSameCategory) {
-          const autoPunchOut = await prisma.attendance.create({
-            data: {
+        if (existingAttendanceWithSameCategory && existingAttendanceWithSameCategory.punchTime) {
+          // Check if the employee already has an auto PunchOut for this date
+          const hasRecentAutoPunchOut = await prisma.attendance.findFirst({
+            where: {
               employeeId: existingAttendanceWithSameCategory.employeeId,
               ambulanceId: existingAttendanceWithSameCategory.ambulanceId,
-              shiftType: existingAttendanceWithSameCategory.shiftType,
-              punchTime: formatDateToMySQLStyle(new Date()),
-              punchLocation: existingAttendanceWithSameCategory.punchLocation,
               status: 'PunchOut',
-              deviceMode: existingAttendanceWithSameCategory.deviceMode,
+              punchOutType: 'auto',
               date: existingAttendanceWithSameCategory.date,
-              imageCapture: existingAttendanceWithSameCategory.imageCapture,
-              responseStatus: 'Success',
-              punchOutType: 'auto'
-            },
-            include: {
-              employee: { select: { name: true } },
-              ambulance: { select: { ambulanceNumber: true } }
+              punchTime: {
+                gte: existingAttendanceWithSameCategory.punchTime as string
+              }
             }
           });
+
+          if (!hasRecentAutoPunchOut) {
+            const autoPunchOutTime = new Date();
+            autoPunchOutTime.setMinutes(autoPunchOutTime.getMinutes() - 1);
+            const autoPunchOut = await prisma.attendance.create({
+              data: {
+                employeeId: existingAttendanceWithSameCategory.employeeId,
+                ambulanceId: existingAttendanceWithSameCategory.ambulanceId,
+                shiftType: existingAttendanceWithSameCategory.shiftType,
+                punchTime: formatDateToMySQLStyle(autoPunchOutTime),
+                punchLocation: existingAttendanceWithSameCategory.punchLocation,
+                status: 'PunchOut',
+                deviceMode: existingAttendanceWithSameCategory.deviceMode,
+                date: existingAttendanceWithSameCategory.date,
+                imageCapture: existingAttendanceWithSameCategory.imageCapture,
+                responseStatus: 'Success',
+                punchOutType: 'auto'
+              },
+              include: {
+                employee: { select: { name: true, employeeSystemId: true } },
+                ambulance: { select: { ambulanceNumber: true } }
+              }
+            });
           // responseRecords.push({
           //   ...autoPunchOut,
           //   employeeName: autoPunchOut.employee.name,
           //   ambulanceNumber: autoPunchOut.ambulance?.ambulanceNumber || null
           // });
 
-          responseRecords.push({
-            id: autoPunchOut.id,
-            employeeId: autoPunchOut.employeeId,
-            ambulanceId: autoPunchOut.ambulanceId,
-            shiftType: autoPunchOut.shiftType,
-            punchTime: autoPunchOut.punchTime,
-            punchLocation: autoPunchOut.punchLocation,
-            status: autoPunchOut.status,
-            punchOutType: autoPunchOut.punchOutType,
-            deviceMode: autoPunchOut.deviceMode,
-            imageCapture: autoPunchOut.imageCapture,
-            date: autoPunchOut.date,
-            responseStatus: autoPunchOut.responseStatus,
-            employeeName: autoPunchOut.employee.name,
-            ambulanceNumber: autoPunchOut.ambulance?.ambulanceNumber || null
-          });
+            responseRecords.push({
+              id: autoPunchOut.id,
+              employeeId: autoPunchOut.employeeId,
+              employeeSystemId: autoPunchOut.employee.employeeSystemId,
+              ambulanceId: autoPunchOut.ambulanceId,
+              shiftType: autoPunchOut.shiftType,
+              punchTime: autoPunchOut.punchTime,
+              punchLocation: autoPunchOut.punchLocation,
+              status: autoPunchOut.status,
+              punchOutType: autoPunchOut.punchOutType,
+              deviceMode: autoPunchOut.deviceMode,
+              imageCapture: autoPunchOut.imageCapture,
+              date: autoPunchOut.date,
+              responseStatus: autoPunchOut.responseStatus,
+              employeeName: autoPunchOut.employee.name,
+              ambulanceNumber: autoPunchOut.ambulance?.ambulanceNumber || null
+            });
+          }
         }
       }
 
@@ -303,7 +328,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
           punchOutType: 'manual'
         },
         include: {
-          employee: { select: { name: true } },
+          employee: { select: { name: true, employeeSystemId: true } },
           ambulance: { select: { ambulanceNumber: true } }
         }
       });
@@ -317,6 +342,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
       responseRecords.unshift({
         id: newAttendance.id,
         employeeId: newAttendance.employeeId,
+        employeeSystemId: newAttendance.employee.employeeSystemId,
         ambulanceId: newAttendance.ambulanceId,
         shiftType: newAttendance.shiftType,
         punchTime: newAttendance.punchTime,
