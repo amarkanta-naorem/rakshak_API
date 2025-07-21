@@ -26,7 +26,8 @@ router.get<{}, AmbulanceResponse[] | { error: string }>("/", async (req, res) =>
             select: {
               username: true,
               password: true,
-              imei: true
+              imei: true,
+              androidDeviceId: true
             },
             orderBy: { createdAt: "desc" },
             take: 1,
@@ -39,7 +40,8 @@ router.get<{}, AmbulanceResponse[] | { error: string }>("/", async (req, res) =>
         sysServiceId: ambulance.sysServiceId ? ambulance.sysServiceId : "",
         imei: ambulance.devices[0]?.imei ?? null,
         username: ambulance.devices[0]?.username ?? null,
-        password: ambulance.devices[0]?.password ?? null
+        password: ambulance.devices[0]?.password ?? null,
+        androidDeviceId: ambulance.devices[0]?.androidDeviceId ?? null
       }));
 
       res.json(response);
