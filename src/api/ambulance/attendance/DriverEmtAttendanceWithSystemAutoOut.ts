@@ -91,7 +91,6 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 
       let responseRecords = [];
 
-      // Handle case: Same employee PunchIn without PunchOut, now PunchOut from different ambulance
       if (existingAttendance && status === 'PunchOut' && ambulanceId && existingAttendance.ambulanceId !== Number(ambulanceId)) {
         const autoPunchOutTime = new Date();
         autoPunchOutTime.setMinutes(autoPunchOutTime.getMinutes() - 1);
@@ -114,11 +113,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
             ambulance: { select: { ambulanceNumber: true } }
           }
         });
-        // responseRecords.push({
-        //   ...autoPunchOut,
-        //   employeeName: autoPunchOut.employee.name,
-        //   ambulanceNumber: autoPunchOut.ambulance?.ambulanceNumber || null
-        // });
+        
         responseRecords.push({
           id: autoPunchOut.id,
           employeeId: autoPunchOut.employeeId,
@@ -138,8 +133,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
         });
       }
 
-      // Handle case: Same employee PunchIn without PunchOut
-      if (existingAttendance && status === 'PunchIn') {
+      if (existingAttendance && status === 'PunchIn' && ambulanceId && existingAttendance.ambulanceId !== Number(ambulanceId)) {
         const autoPunchOutTime = new Date();
         autoPunchOutTime.setMinutes(autoPunchOutTime.getMinutes() - 1);
         const autoPunchOut = await prisma.attendance.create({
@@ -161,11 +155,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
             ambulance: { select: { ambulanceNumber: true } }
           }
         });
-        // responseRecords.push({
-        //   ...autoPunchOut,
-        //   employeeName: autoPunchOut.employee.name,
-        //   ambulanceNumber: autoPunchOut.ambulance?.ambulanceNumber || null
-        // });
+        
         responseRecords.push({
           id: autoPunchOut.id,
           employeeId: autoPunchOut.employeeId,
@@ -250,7 +240,6 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
         );
 
         if (existingAttendanceWithSameCategory && existingAttendanceWithSameCategory.punchTime) {
-          // Check if the employee already has an auto PunchOut for this date
           const hasRecentAutoPunchOut = await prisma.attendance.findFirst({
             where: {
               employeeId: existingAttendanceWithSameCategory.employeeId,
@@ -286,11 +275,6 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
                 ambulance: { select: { ambulanceNumber: true } }
               }
             });
-          // responseRecords.push({
-          //   ...autoPunchOut,
-          //   employeeName: autoPunchOut.employee.name,
-          //   ambulanceNumber: autoPunchOut.ambulance?.ambulanceNumber || null
-          // });
 
             responseRecords.push({
               id: autoPunchOut.id,
@@ -332,12 +316,6 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
           ambulance: { select: { ambulanceNumber: true } }
         }
       });
-
-      // responseRecords.unshift({
-      //   ...newAttendance,
-      //   employeeName: newAttendance.employee.name,
-      //   ambulanceNumber: newAttendance.ambulance?.ambulanceNumber || null
-      // });
 
       responseRecords.unshift({
         id: newAttendance.id,

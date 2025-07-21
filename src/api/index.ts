@@ -15,6 +15,7 @@ import allAmbulances from './ambulance/GetAllAmbulanceCredentials';
 import insertAmbulances from './ambulance/InsertAmbulances';
 import insertAmbulanceDevices from './ambulance/ambulanceDevice/InsertAmbulanceDevices';
 import GetAmbulanceEmployeeDetails from './ambulance/GetAmbulanceEmployeeDetails';
+import SyncAmbulanceEmployeeDetails from './ambulance/SyncAmbulanceEmployeeDetails';
 
 import PunchInPunchOutAttendance from './ambulance/attendance/AttendancePunchInPunchOut';
 import DiverEmtAttendance from './ambulance/attendance/DriverEmtAttendance';
@@ -48,6 +49,7 @@ router.use('/ambulances/all', allAmbulances);
 router.use('/ambulance', insertAmbulances);
 router.use('/ambulance/device', insertAmbulanceDevices);
 router.use('/ambulance/employees', GetAmbulanceEmployeeDetails);
+router.use('/ambulance/employees/sync', SyncAmbulanceEmployeeDetails);
 
 router.use('/attendance', PunchInPunchOutAttendance);
 router.use('/employee/attendance', DiverEmtAttendance);
