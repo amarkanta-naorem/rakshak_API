@@ -79,7 +79,8 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
         where: {
           employeeId: Number(employeeId),
           status: 'PunchIn',
-          punchOutType: 'manual'
+          punchOutType: 'manual',
+          date: date
         },
         include: {
           employee: {
