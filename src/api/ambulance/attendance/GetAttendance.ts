@@ -75,7 +75,9 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
             responseStatus: true,
             ambulance: {
               select: {
+                sysServiceId: true,
                 ambulanceNumber: true,
+                isSpareAmbulance: true
               },
             },
           },
@@ -113,7 +115,9 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       phoneNumber: employee.phoneNumber || '',
       userRole: employee.categoryId ? categoryMap.get(employee.categoryId) || 'unknown' : 'unknown',
       attendance: employee.Attendance.map((att) => ({
+        ambulanceSysServiceId: att.ambulance?.sysServiceId,
         ambulanceNumber: att.ambulance?.ambulanceNumber || '',
+        isSpareAmbulance: att.ambulance?.isSpareAmbulance,
         punchTime: att.punchTime || '',
         punchLocation: att.punchLocation || '',
         status: att.status,

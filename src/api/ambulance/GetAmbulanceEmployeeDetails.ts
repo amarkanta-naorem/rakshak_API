@@ -45,7 +45,7 @@ router.get('/', async (req, res) => {
       name: emp.name,
       phoneNumber: emp.phoneNumber,
       awsFaceId: emp.awsFaceId,
-      faceImageData: emp.faceImageData ? emp.faceImageData : null,
+      faceImageData: emp.faceImageData ? 'NA' : null,
       categoryName: emp.category?.name ?? null,
       shiftStartTime: emp.category?.shiftStartTime ?? null,
       shiftEndTime: emp.category?.shiftEndTime ?? null,

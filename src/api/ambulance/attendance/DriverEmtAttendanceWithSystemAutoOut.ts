@@ -79,27 +79,45 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
         where: {
           employeeId: Number(employeeId),
           status: 'PunchIn',
-          punchOutType: 'manual',
-          date: date
+          punchOutType: 'manual'
         },
         include: {
           employee: {
             select: { categoryId: true, name: true, employeeSystemId: true }
           }
+        },
+        orderBy: {
+          punchTime: 'desc'
         }
       });
 
       let responseRecords = [];
 
+      // Calculate punchTime for auto PunchOut (10 seconds before received punchTime or current time)
+      const getAutoPunchOutTime = () => {
+        const baseTime = punchTime ? new Date(punchTime) : new Date();
+        baseTime.setSeconds(baseTime.getSeconds() - 10);
+        return formatDateToMySQLStyle(baseTime);
+      };
+
+      // Handle case: Same employee PunchIn without PunchOut, now PunchOut from different ambulance
       if (existingAttendance && status === 'PunchOut' && ambulanceId && existingAttendance.ambulanceId !== Number(ambulanceId)) {
-        const autoPunchOutTime = new Date();
-        autoPunchOutTime.setMinutes(autoPunchOutTime.getMinutes() - 1);
+        const latestAttendance = await prisma.attendance.findFirst({
+          where: {
+            employeeId: Number(employeeId)
+          },
+          orderBy: {
+            punchTime: 'desc'
+          }
+        });
+
+        if (latestAttendance && latestAttendance.status === 'PunchIn') {
         const autoPunchOut = await prisma.attendance.create({
           data: {
             employeeId: existingAttendance.employeeId,
-            ambulanceId: existingAttendance.ambulanceId,
+            ambulanceId: latestAttendance.ambulanceId,
             shiftType: existingAttendance.shiftType,
-            punchTime: formatDateToMySQLStyle(autoPunchOutTime),
+            punchTime: getAutoPunchOutTime(),
             punchLocation: existingAttendance.punchLocation,
             status: 'PunchOut',
             deviceMode: existingAttendance.deviceMode,
@@ -132,16 +150,26 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
           ambulanceNumber: autoPunchOut.ambulance?.ambulanceNumber || null
         });
       }
+      }
 
-      if (existingAttendance && status === 'PunchIn' && ambulanceId && existingAttendance.ambulanceId !== Number(ambulanceId)) {
-        const autoPunchOutTime = new Date();
-        autoPunchOutTime.setMinutes(autoPunchOutTime.getMinutes() - 1);
+      // Handle case: Same employee PunchIn without PunchOut
+      if (existingAttendance && status === 'PunchIn') {
+        const latestAttendance = await prisma.attendance.findFirst({
+          where: {
+            employeeId: Number(employeeId)
+          },
+          orderBy: {
+            punchTime: 'desc'
+          }
+        });
+
+        if (latestAttendance && latestAttendance.status === 'PunchIn') {
         const autoPunchOut = await prisma.attendance.create({
           data: {
             employeeId: existingAttendance.employeeId,
-            ambulanceId: existingAttendance.ambulanceId,
+            ambulanceId: latestAttendance.ambulanceId,
             shiftType: existingAttendance.shiftType,
-            punchTime: formatDateToMySQLStyle(autoPunchOutTime),
+            punchTime: getAutoPunchOutTime(),
             punchLocation: existingAttendance.punchLocation,
             status: 'PunchOut',
             deviceMode: existingAttendance.deviceMode,
@@ -173,6 +201,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
           employeeName: autoPunchOut.employee.name,
           ambulanceNumber: autoPunchOut.ambulance?.ambulanceNumber || null
         });
+        }
       }
 
       let imageCapture: string | undefined;
@@ -239,29 +268,23 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
           record.employee?.categoryId === currentEmployee.categoryId
         );
 
-        if (existingAttendanceWithSameCategory && existingAttendanceWithSameCategory.punchTime) {
-          const hasRecentAutoPunchOut = await prisma.attendance.findFirst({
+        if (existingAttendanceWithSameCategory) {
+          const latestAttendance = await prisma.attendance.findFirst({
             where: {
-              employeeId: existingAttendanceWithSameCategory.employeeId,
-              ambulanceId: existingAttendanceWithSameCategory.ambulanceId,
-              status: 'PunchOut',
-              punchOutType: 'auto',
-              date: existingAttendanceWithSameCategory.date,
-              punchTime: {
-                gte: existingAttendanceWithSameCategory.punchTime as string
-              }
+              employeeId: existingAttendanceWithSameCategory.employeeId
+            },
+            orderBy: {
+              punchTime: 'desc'
             }
           });
 
-          if (!hasRecentAutoPunchOut) {
-            const autoPunchOutTime = new Date();
-            autoPunchOutTime.setMinutes(autoPunchOutTime.getMinutes() - 1);
+          if (latestAttendance && latestAttendance.status === 'PunchIn') {
             const autoPunchOut = await prisma.attendance.create({
               data: {
                 employeeId: existingAttendanceWithSameCategory.employeeId,
-                ambulanceId: existingAttendanceWithSameCategory.ambulanceId,
+                ambulanceId: latestAttendance.ambulanceId,
                 shiftType: existingAttendanceWithSameCategory.shiftType,
-                punchTime: formatDateToMySQLStyle(autoPunchOutTime),
+                punchTime: getAutoPunchOutTime(),
                 punchLocation: existingAttendanceWithSameCategory.punchLocation,
                 status: 'PunchOut',
                 deviceMode: existingAttendanceWithSameCategory.deviceMode,
