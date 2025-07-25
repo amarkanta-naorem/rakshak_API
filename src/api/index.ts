@@ -28,6 +28,8 @@ import AmbulanceLoginRecord from './ambulance/AmbulanceLoginRecord';
 import AmbulanceFuelLog from './ambulance/fuel/AmbulanceFuelLog';
 import AmbulanceFuelAlertInsert from './ambulance/fuel/AmbulanceFuelAlertInsert';
 
+import EmployeeByAmbulance from './gtracIntegration/employeeByAmbulance';
+
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
@@ -61,5 +63,7 @@ router.use('/ambulance/login/records', AmbulanceLoginRecord);
 
 router.use('/ambulance/fuel/record', AmbulanceFuelLog);
 router.use('/ambulance/fuel/alert', AmbulanceFuelAlertInsert);
+
+router.use('/ambulance/employee', EmployeeByAmbulance);
 
 export default router;
