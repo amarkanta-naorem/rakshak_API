@@ -20,6 +20,7 @@ import SyncAmbulanceEmployeeDetails from './ambulance/SyncAmbulanceEmployeeDetai
 import PunchInPunchOutAttendance from './ambulance/attendance/AttendancePunchInPunchOut';
 import DiverEmtAttendance from './ambulance/attendance/DriverEmtAttendance';
 import DiverEmtAttendanceWithSystemAutoOut from './ambulance/attendance/DriverEmtAttendanceWithSystemAutoOut';
+import DriverEmtAttendanceWithSystemAutoOutWithGpsStatus from './ambulance/attendance/DriverEmtAttendanceWithSystemAutoOutAndGpsStatus';
 import GetAttendance from './ambulance/attendance/GetAttendance';
 
 import AppVersionService from './ambulance/ambulanceDevice/AppVersionService';
@@ -30,6 +31,12 @@ import AmbulanceFuelAlertInsert from './ambulance/fuel/AmbulanceFuelAlertInsert'
 
 import EmployeeByAmbulance from './gtracIntegration/employeeByAmbulance';
 
+
+// Dashboard APIs
+import fetchActiveEmployeesByAmbulanceNumber from './dashboard/fetchActiveEmployeesByAmbulanceNumber'
+import driversOnlyAmbulances from './dashboard/driversOnlyAmbulances';
+import emtsOnlyAMbulances from './dashboard/emtsOnlyAmbulances';
+
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
@@ -37,6 +44,10 @@ router.get<{}, MessageResponse>('/', (req, res) => {
     message: 'V1 API',
   });
 });
+
+router.use('/dashboard/ambulance/active/employees', fetchActiveEmployeesByAmbulanceNumber);
+router.use('/dashboard/ambulance/driver/only', driversOnlyAmbulances);
+router.use('/dashboard/ambulance/emt/only', emtsOnlyAMbulances);
 
 router.use('/master/categories', categories);
 router.use('/master/ambulance', ambulances);
@@ -56,6 +67,7 @@ router.use('/ambulance/employees/sync', SyncAmbulanceEmployeeDetails);
 router.use('/attendance', PunchInPunchOutAttendance);
 router.use('/employee/attendance', DiverEmtAttendance);
 router.use('/employee/attendance/latest', DiverEmtAttendanceWithSystemAutoOut);
+router.use('/employee/attendance/latest/withGpsStatus', DriverEmtAttendanceWithSystemAutoOutWithGpsStatus);
 router.use('/attendance', GetAttendance);
 
 router.use('/ambulance/device', AppVersionService);

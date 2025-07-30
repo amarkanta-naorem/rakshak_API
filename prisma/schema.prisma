@@ -49,6 +49,7 @@ model Ambulance {
   location         String?           @db.VarChar(100)
   mdtMobileNumber  String?           @unique @db.VarChar(20)
   isSpareAmbulance Boolean           @default(false)
+  gpsStatus        String?
   devices          AmbulanceDevice[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime?
@@ -132,6 +133,7 @@ model Attendance {
   imageCapture   String?
   date           String?
   responseStatus ResponseStatus @default(Success)
+  gpsStatus      String?
 
   @@map("attendances")
 }
