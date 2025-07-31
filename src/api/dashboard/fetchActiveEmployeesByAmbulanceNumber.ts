@@ -31,7 +31,6 @@ interface AmbulanceAttendanceResponse {
 const prisma = new PrismaClient();
 const router = express.Router();
 
-// Define type for Attendance records
 type AttendanceRecord = {
   employeeId: number;
   employee: {
@@ -47,7 +46,6 @@ type AttendanceRecord = {
 
 router.get<{}, AmbulanceAttendanceResponse | { error: string }>("/", async (req, res) => {
   try {
-    // Get Driver and EMT category IDs
     const [driverCategory, emtCategory] = await Promise.all([
       prisma.category.findFirst({ where: { name: 'Driver' } }),
       prisma.category.findFirst({ where: { name: 'EMT' } }),
@@ -57,7 +55,6 @@ router.get<{}, AmbulanceAttendanceResponse | { error: string }>("/", async (req,
       throw new Error('Driver or EMT category not found');
     }
 
-    // Set dynamic date ranges based on CURDATE()
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
     const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
@@ -66,7 +63,6 @@ router.get<{}, AmbulanceAttendanceResponse | { error: string }>("/", async (req,
     const todayEndISO = todayEnd.toISOString();
     const yesterdayStartISO = yesterdayStart.toISOString();
 
-    // Fetch total counts
     const [totalAmbulances, totalDrivers, totalEmts] = await Promise.all([
       prisma.ambulance.count({
         where: {
@@ -91,7 +87,6 @@ router.get<{}, AmbulanceAttendanceResponse | { error: string }>("/", async (req,
       }),
     ]);
 
-    // Fetch ambulances with their attendance
     const ambulances = await prisma.ambulance.findMany({
       where: {
         isSpareAmbulance: false,
@@ -139,19 +134,13 @@ router.get<{}, AmbulanceAttendanceResponse | { error: string }>("/", async (req,
       },
     });
 
-    // Collect all valid PunchIn records to prioritize latest
     const allPunchIns: (AttendanceRecord & { ambulanceNumber: string | null })[] = [];
     ambulances.forEach((ambulance) => {
       if (ambulance.ambulanceNumber) {
         ambulance.Attendance.forEach((att) => {
-          if (
-            att.status === 'PunchIn' &&
-            att.punchTime &&
-            !att.employee.employeeSystemId?.toLowerCase().includes('itg')
-          ) {
+          if (att.status === 'PunchIn' && att.punchTime && !att.employee.employeeSystemId?.toLowerCase().includes('itg')) {
             const punchTime = new Date(att.punchTime);
-            const hasPunchOut = ambulance.Attendance.some(
-              (a2: AttendanceRecord) =>
+            const hasPunchOut = ambulance.Attendance.some((a2: AttendanceRecord) =>
                 a2.employeeId === att.employeeId &&
                 a2.status === 'PunchOut' &&
                 a2.punchTime &&
@@ -165,25 +154,18 @@ router.get<{}, AmbulanceAttendanceResponse | { error: string }>("/", async (req,
       }
     });
 
-    // Sort PunchIn records by punchTime (descending) to prioritize latest
     allPunchIns.sort((a, b) => new Date(b.punchTime!).getTime() - new Date(a.punchTime!).getTime());
 
-    // Track assigned drivers and EMTs
     const assignedDrivers = new Set<string>();
     const assignedEMTs = new Set<string>();
-    const ambulanceAssignments = new Map<
-      string,
-      { driver: AttendanceRecord | null; emt: AttendanceRecord | null }
-    >();
+    const ambulanceAssignments = new Map<string, { driver: AttendanceRecord | null; emt: AttendanceRecord | null }>();
 
-    // Initialize assignments for all ambulances
     ambulances.forEach((ambulance) => {
       if (ambulance.ambulanceNumber) {
         ambulanceAssignments.set(ambulance.ambulanceNumber, { driver: null, emt: null });
       }
     });
 
-    // Assign drivers and EMTs based on latest PunchIn
     allPunchIns.forEach((att) => {
       const employeeSystemId = att.employee.employeeSystemId ?? '';
       const isDriver = att.employee.categoryId === driverCategory.id;
@@ -198,49 +180,29 @@ router.get<{}, AmbulanceAttendanceResponse | { error: string }>("/", async (req,
       }
     });
 
-    // Process ambulances into response format
-    const processedAmbulances: AmbulanceAttendanceResponse['ambulances'] = Array.from(
-      ambulanceAssignments.entries(),
-    ).map(([ambulanceNumber, { driver, emt }]) => ({
+    const processedAmbulances: AmbulanceAttendanceResponse['ambulances'] = Array.from(ambulanceAssignments.entries(),).map(([ambulanceNumber, { driver, emt }]) => ({
       ambulanceNumber,
       driver: {
         name: driver?.employee.name ?? null,
         employeeSystemId: driver?.employee.employeeSystemId ?? null,
         phoneNumber: driver?.employee.phoneNumber ?? null,
-        latestPunchTime: driver?.punchTime
-          ? new Date(driver.punchTime).toISOString().replace('T', ' ').slice(0, 19)
-          : null,
+        latestPunchTime: driver?.punchTime ? new Date(driver.punchTime).toISOString().replace('T', ' ').slice(0, 19) : null,
         punchOutType: driver?.punchOutType ?? null,
       },
       emt: {
         name: emt?.employee.name ?? null,
         employeeSystemId: emt?.employee.employeeSystemId ?? null,
         phoneNumber: emt?.employee.phoneNumber ?? null,
-        latestPunchTime: emt?.punchTime
-          ? new Date(emt.punchTime).toISOString().replace('T', ' ').slice(0, 19)
-          : null,
+        latestPunchTime: emt?.punchTime ? new Date(emt.punchTime).toISOString().replace('T', ' ').slice(0, 19) : null,
         punchOutType: emt?.punchOutType ?? null,
       },
     }));
 
-    // Calculate counts
-    const totalActiveAmbulances = processedAmbulances.filter(
-      (amb) => amb.driver.latestPunchTime && amb.emt.latestPunchTime,
-    ).length;
+    const totalActiveAmbulances = processedAmbulances.filter((amb) => amb.driver.latestPunchTime && amb.emt.latestPunchTime,).length;
+    const totalInActiveAmbulances = processedAmbulances.filter((amb) => !amb.driver.latestPunchTime && !amb.emt.latestPunchTime,).length;
+    const driversOnly = processedAmbulances.filter((amb) => amb.driver.latestPunchTime && !amb.emt.latestPunchTime,).length;
+    const emtsOnly = processedAmbulances.filter((amb) => !amb.driver.latestPunchTime && amb.emt.latestPunchTime,).length;
 
-    const totalInActiveAmbulances = processedAmbulances.filter(
-      (amb) => !amb.driver.latestPunchTime && !amb.emt.latestPunchTime,
-    ).length;
-
-    const driversOnly = processedAmbulances.filter(
-      (amb) => amb.driver.latestPunchTime && !amb.emt.latestPunchTime,
-    ).length;
-
-    const emtsOnly = processedAmbulances.filter(
-      (amb) => !amb.driver.latestPunchTime && amb.emt.latestPunchTime,
-    ).length;
-
-    // Prepare response
     const response: AmbulanceAttendanceResponse = {
       totalAmbulances,
       totalActiveAmbulances,

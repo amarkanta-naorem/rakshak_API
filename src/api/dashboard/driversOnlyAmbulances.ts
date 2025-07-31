@@ -24,7 +24,6 @@ interface DriverAttendanceResponse {
 const prisma = new PrismaClient();
 const router = express.Router();
 
-// Define Attendance type to match Prisma's schema
 interface AttendanceRecord {
   id: number;
   employeeId: number;
@@ -38,26 +37,21 @@ interface AttendanceRecord {
     phoneNumber: string | null;
     category: { name: string } | null;
   };
-  // Include other possible fields from Prisma schema
   gpsStatus?: string | null;
   imageCapture?: string | null;
-  // Add other fields as needed based on your schema
 }
 
 router.get<{}, DriverAttendanceResponse | { error: string }>("/", async (req, res) => {
   try {
-    // Get Driver category ID
     const driverCategory = await prisma.category.findFirst({ where: { name: 'Driver' } });
     if (!driverCategory) throw new Error('Driver category not found');
 
-    // Set dynamic date ranges based on CURDATE()
     const now = new Date();
     const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
     const yesterdayStartISO = yesterdayStart.toISOString();
     const todayEndISO = todayEnd.toISOString();
 
-    // Fetch ambulances with driver attendance
     const ambulances = await prisma.ambulance.findMany({
       where: {
         isSpareAmbulance: false,
@@ -87,33 +81,16 @@ router.get<{}, DriverAttendanceResponse | { error: string }>("/", async (req, re
       },
     });
 
-    // Track assigned drivers to prevent duplicates
     const assignedDrivers = new Set<string>();
     const processedDrivers: DriverAttendanceResponse['drivers'] = ambulances
-      .filter((ambulance) =>
-        ambulance.Attendance.some(
-          (att: AttendanceRecord) => !att.employee.employeeSystemId?.toLowerCase().includes('itg'),
-        ),
-      )
+      .filter((ambulance) => ambulance.Attendance.some((att: AttendanceRecord) => !att.employee.employeeSystemId?.toLowerCase().includes('itg')))
       .map((ambulance) => {
-        // Get latest valid PunchIn for this ambulance, excluding already assigned drivers
         const driverAttendance = ambulance.Attendance
-          .filter(
-            (att: AttendanceRecord) =>
-              att.status === 'PunchIn' &&
-              att.punchTime &&
-              !assignedDrivers.has(att.employee.employeeSystemId),
-          )
+          .filter((att: AttendanceRecord) => att.status === 'PunchIn' && att.punchTime && !assignedDrivers.has(att.employee.employeeSystemId))
           .sort((a: AttendanceRecord, b: AttendanceRecord) => new Date(b.punchTime!).getTime() - new Date(a.punchTime!).getTime())
           .find((att: AttendanceRecord) => {
             const punchTime = new Date(att.punchTime!);
-            const hasPunchOut = ambulance.Attendance.some(
-              (a2: AttendanceRecord) =>
-                a2.employeeId === att.employeeId &&
-                a2.status === 'PunchOut' &&
-                a2.punchTime &&
-                new Date(a2.punchTime) > punchTime,
-            );
+            const hasPunchOut = ambulance.Attendance.some((a2: AttendanceRecord) => a2.employeeId === att.employeeId && a2.status === 'PunchOut' && a2.punchTime && new Date(a2.punchTime) > punchTime);
             return !hasPunchOut;
           });
 
@@ -137,7 +114,6 @@ router.get<{}, DriverAttendanceResponse | { error: string }>("/", async (req, re
       })
       .filter((group) => group.info.length > 0);
 
-    // Add drivers without an ambulance (inactive drivers)
     const allDrivers = await prisma.employee.findMany({
       where: {
         categoryId: driverCategory.id,
@@ -161,36 +137,31 @@ router.get<{}, DriverAttendanceResponse | { error: string }>("/", async (req, re
     });
 
     const inactiveDriverGroups: DriverAttendanceResponse['drivers'] = allDrivers
-      .filter((driver) => {
-        const latestAttendance = driver.Attendance.sort(
-          (a, b) => new Date(b.punchTime || '').getTime() - new Date(a.punchTime || '').getTime(),
-        )[0];
-        return !assignedDrivers.has(driver.employeeSystemId ?? '') && (!latestAttendance || latestAttendance.status !== 'PunchIn');
-      })
-      .map((driver) => ({
-        ambulanceNumber: null,
-        info: [{
-          employeeSystemId: driver.employeeSystemId,
-          name: driver.name,
-          phoneNumber: driver.phoneNumber,
-          designation: driver.category?.name ?? null,
-          latestPunchTime: driver.Attendance.length > 0 ? driver.Attendance[0].punchTime : null,
-          latestStatus: driver.Attendance.length > 0 ? driver.Attendance[0].status : null,
-          punchOutType: driver.Attendance.length > 0 ? driver.Attendance[0].punchOutType : null,
+      .filter((driver) => !assignedDrivers.has(driver.employeeSystemId ?? ''))
+      .map((driver) => {
+        const latestAttendance = driver.Attendance.sort((a, b) => new Date(b.punchTime || '').getTime() - new Date(a.punchTime || '').getTime())[0];
+        return {
           ambulanceNumber: null,
-        }],
-      }));
+          info: [{
+            employeeSystemId: driver.employeeSystemId,
+            name: driver.name,
+            phoneNumber: driver.phoneNumber,
+            designation: driver.category?.name ?? null,
+            latestPunchTime: latestAttendance && latestAttendance.status === 'PunchIn' ? null : (driver.Attendance.length > 0 ? driver.Attendance[0].punchTime : null),
+            latestStatus: driver.Attendance.length > 0 ? driver.Attendance[0].status : null,
+            punchOutType: driver.Attendance.length > 0 ? driver.Attendance[0].punchOutType : null,
+            ambulanceNumber: null,
+          }],
+        };
+      });
 
-    // Combine active and inactive drivers
-    const drivers = [...processedDrivers, ...inactiveDriverGroups].filter((group) => group.info.length > 0);
+    const drivers = [...processedDrivers, ...inactiveDriverGroups];
 
-    // Calculate counts
     const totalDrivers = allDrivers.length;
     const activeDrivers = processedDrivers.filter((group) => group.info.length > 0).length;
     const totalAmbulances = new Set(processedDrivers.map((group) => group.ambulanceNumber)).size;
     const inactiveDrivers = totalDrivers - activeDrivers;
 
-    // Prepare response
     const response: DriverAttendanceResponse = {
       totalDrivers,
       totalAmbulances,
